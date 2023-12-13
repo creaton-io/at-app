@@ -2,29 +2,28 @@ import {useEffect} from 'react'
 import {i18n} from '@lingui/core'
 
 import {useLanguagePrefs} from '#/state/preferences'
-
-export const locales = {
-  en: 'English',
-  cs: 'Česky',
-  fr: 'Français',
-  hi: 'हिंदी',
-  es: 'Español',
-}
-export const defaultLocale = 'en'
+import {sanitizeAppLanguageSetting} from '#/locale/helpers'
+import {AppLanguage} from '#/locale/languages'
 
 /**
  * We do a dynamic import of just the catalog that we need
- * @param locale any locale string
  */
-export async function dynamicActivate(locale: string) {
+export async function dynamicActivate(locale: AppLanguage) {
   let mod: any
 
-  if (locale === 'hi') {
-    // @ts-ignore
-    mod = await import(`./locales/hi/messages`)
-  } else {
-    // @ts-ignore
-    mod = await import(`./locales/en/messages`)
+  switch (locale) {
+    case AppLanguage.hi: {
+      mod = await import(`./locales/hi/messages`)
+      break
+    }
+    case AppLanguage.ja: {
+      mod = await import(`./locales/ja/messages`)
+      break
+    }
+    default: {
+      mod = await import(`./locales/en/messages`)
+      break
+    }
   }
 
   i18n.load(locale, mod.messages)
@@ -34,6 +33,6 @@ export async function dynamicActivate(locale: string) {
 export async function useLocaleLanguage() {
   const {appLanguage} = useLanguagePrefs()
   useEffect(() => {
-    dynamicActivate(appLanguage)
+    dynamicActivate(sanitizeAppLanguageSetting(appLanguage))
   }, [appLanguage])
 }

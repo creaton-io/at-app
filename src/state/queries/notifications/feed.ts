@@ -60,13 +60,21 @@ export function useNotificationFeedQuery(opts?: {enabled?: boolean}) {
     staleTime: STALE.INFINITY,
     queryKey: RQKEY(),
     async queryFn({pageParam}: {pageParam: RQPageParam}) {
-      let page = await fetchPage({
-        limit: PAGE_SIZE,
-        cursor: pageParam,
-        queryClient,
-        moderationOpts,
-        threadMutes,
-      })
+      let page
+      if (!pageParam) {
+        // for the first page, we check the cached page held by the unread-checker first
+        page = unreads.getCachedUnreadPage()
+      }
+      if (!page) {
+        page = await fetchPage({
+          limit: PAGE_SIZE,
+          cursor: pageParam,
+          queryClient,
+          moderationOpts,
+          threadMutes,
+          fetchAdditionalData: true,
+        })
+      }
 
       // if the first page has an unread, mark all read
       if (!pageParam && page.items[0] && !page.items[0].notification.isRead) {
@@ -78,6 +86,20 @@ export function useNotificationFeedQuery(opts?: {enabled?: boolean}) {
     initialPageParam: undefined,
     getNextPageParam: lastPage => lastPage.cursor,
     enabled,
+    select(data: InfiniteData<FeedPage>) {
+      // override 'isRead' using the first page's returned seenAt
+      // we do this because the `markAllRead()` call above will
+      // mark subsequent pages as read prematurely
+      const seenAt = data.pages[0]?.seenAt || new Date()
+      for (const page of data.pages) {
+        for (const item of page.items) {
+          item.notification.isRead =
+            seenAt > new Date(item.notification.indexedAt)
+        }
+      }
+
+      return data
+    },
   })
 
   useEffect(() => {
@@ -92,7 +114,13 @@ export function useNotificationFeedQuery(opts?: {enabled?: boolean}) {
       count += page.items.length
     }
 
-    if (!isFetching && hasNextPage && count < PAGE_SIZE && numEmpties < 3) {
+    if (
+      !isFetching &&
+      hasNextPage &&
+      count < PAGE_SIZE &&
+      numEmpties < 3 &&
+      (data?.pages.length || 0) < 6
+    ) {
       query.fetchNextPage()
     }
   }, [query])
