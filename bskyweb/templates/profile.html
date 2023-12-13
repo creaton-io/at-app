@@ -2,16 +2,16 @@
 
 {% block head_title %}
 {%- if profileView -%}
-  @{{ profileView.Handle }} on Bluesky
+  @{{ profileView.Handle }} on Creaton
 {%- else -%}
-  Bluesky
+  Creaton
 {%- endif -%}
 {% endblock %}
 
 {% block html_head_extra -%}
 {%- if profileView -%}
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Bluesky Social">
+  <meta property="og:site_name" content="Creaton Social">
   {%- if requestURI %}
   <meta property="og:url" content="{{ requestURI }}">
   {% endif -%}

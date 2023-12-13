@@ -5,7 +5,10 @@ import {useLanguagePrefs} from '#/state/preferences'
 
 export const locales = {
   en: 'English',
+  cs: 'Česky',
+  fr: 'Français',
   hi: 'हिंदी',
+  es: 'Español',
 }
 export const defaultLocale = 'en'
 
@@ -17,8 +20,10 @@ export async function dynamicActivate(locale: string) {
   let mod: any
 
   if (locale === 'hi') {
+    // @ts-ignore
     mod = await import(`./locales/hi/messages`)
   } else {
+    // @ts-ignore
     mod = await import(`./locales/en/messages`)
   }
 

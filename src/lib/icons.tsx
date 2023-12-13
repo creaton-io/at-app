@@ -1,6 +1,15 @@
 import React from 'react'
 import {StyleProp, TextStyle, ViewStyle} from 'react-native'
-import Svg, {Path, Rect, Line, Ellipse} from 'react-native-svg'
+import Svg, {
+  Path,
+  Rect,
+  Line,
+  Ellipse,
+  Defs,
+  G,
+  LinearGradient,
+  Stop,
+} from 'react-native-svg'
 
 export function GridIcon({
   style,
@@ -604,6 +613,78 @@ export function DownIconSolid({
         strokeLinejoin="round"
         d="M 7 11.5 L 2 6.5 L 4.5 6.5 L 4.5 3 L 9.5 3 L 9.5 6.5 L 12 6.5 L 7 11.5 Z"
       />
+    </Svg>
+  )
+}
+
+export function CreatonIcon({
+  style,
+  size,
+}: {
+  style?: StyleProp<ViewStyle>
+  size?: string | number
+}) {
+  return (
+    <Svg
+      viewBox="0 0 200 200"
+      width={size || 24}
+      height={size || 24}
+      style={style}>
+      <Defs>
+        <LinearGradient
+          id="grd1"
+          gradientUnits="userSpaceOnUse"
+          x1={166.696}
+          y1={153.348}
+          x2={79.279}
+          y2={196.092}>
+          <Stop offset={0} stopColor="#63c88e" />
+          <Stop offset={1} stopColor="#26359c" />
+        </LinearGradient>
+        <LinearGradient
+          id="grd2"
+          gradientUnits="userSpaceOnUse"
+          x1={15}
+          y1={72.359}
+          x2={91.248}
+          y2={72.359}>
+          <Stop offset={0} stopColor="#63c88e" />
+          <Stop offset={1} stopColor="#26359c" />
+        </LinearGradient>
+      </Defs>
+      <G id="Layer 1">
+        <G id="&lt;Group&gt;">
+          <G id="&lt;Group&gt;">
+            <Path
+              id="&lt;Path&gt;"
+              className="shp0"
+              d="M98.52 58.38L65.14 24.84l52.19.07 33.64 33.53c-14.5 14.49-38 14.47-52.45-.06z"
+              fill="#43e296"
+            />
+            <Path
+              id="&lt;Path&gt;"
+              d="M91.25 148.93L42.4 100.09l74.93-75.18-52.19-.07-49.62 49.62v51.24l49.5 49.46h52.51l32-32c-14.5-14.5-38.01-14.5-52.51 0l-5.77 5.77z"
+              fill="url(#grd1)"
+            />
+            <Path
+              id="&lt;Path&gt;"
+              d="M97.08 143.1l-32.06 32.06h52.51l32-32-.06-.06c-14.47-14.46-37.92-14.46-52.39 0z"
+              fill="#42389d"
+            />
+            <Path
+              id="&lt;Path&gt;"
+              d="M42.4 100.09L15.52 74.36 15 125.35l50.02 49.81 26.23-26.22-48.85-48.85z"
+              fill="url(#grd2)"
+            />
+            <Path
+              id="&lt;Path&gt;"
+              className="shp0"
+              d="M116.55 99.81l-25.06 25.06-25.07-25.06 25.07-25.06 25.06 25.06z"
+              fill="#43e296"
+            />
+          </G>
+        </G>
+      </G>
     </Svg>
   )
 }

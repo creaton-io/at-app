@@ -38,7 +38,7 @@ export function WelcomeDesktop({next}: Props) {
             textAlign: horizontal ? 'right' : 'left',
           },
         ]}>
-        Bluesky
+        Creaton
       </Text>
     </>
   )
@@ -52,7 +52,7 @@ export function WelcomeDesktop({next}: Props) {
         <FontAwesomeIcon icon={'globe'} size={36} color={pal.colors.link} />
         <View style={[styles.rowText]}>
           <Text type="xl-bold" style={[pal.text]}>
-            Bluesky is public.
+            Creaton is onchain.
           </Text>
           <Text type="xl" style={[pal.text, s.pt2]}>
             Your posts, likes, and blocks are public. Mutes are private.
@@ -63,7 +63,7 @@ export function WelcomeDesktop({next}: Props) {
         <FontAwesomeIcon icon={'at'} size={36} color={pal.colors.link} />
         <View style={[styles.rowText]}>
           <Text type="xl-bold" style={[pal.text]}>
-            Bluesky is open.
+            Creaton in onchain.
           </Text>
           <Text type="xl" style={[pal.text, s.pt2]}>
             Never lose access to your followers and data.

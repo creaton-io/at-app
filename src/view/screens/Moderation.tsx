@@ -227,10 +227,12 @@ function PwiOptOut() {
         </Text>
         <Text style={[pal.textLight, {fontWeight: '500'}]}>
           <Trans>
-            Note: Bluesky is an open and public network. This setting only
-            limits the visibility of your content on the Bluesky app and
-            website, and other apps may not respect this setting. Your content
-            may still be shown to logged-out users by other apps and websites.
+            Note: Creaton is an open and public network, and enabling this will
+            not make your profile private or limit the ability of logged in
+            users to see your posts. This setting only limits the visibility of
+            posts on the Creaton app and website; third-party apps that display
+            Creaton content may not respect this setting, and could show your
+            content to logged-out users.
           </Trans>
         </Text>
         <TextLink

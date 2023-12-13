@@ -3,7 +3,7 @@ import {Insets, Platform} from 'react-native'
 export const LOCAL_DEV_SERVICE =
   Platform.OS === 'android' ? 'http://10.0.2.2:2583' : 'http://localhost:2583'
 export const STAGING_SERVICE = 'https://staging.bsky.dev'
-export const PROD_SERVICE = 'https://bsky.social'
+export const PROD_SERVICE = 'https://creaton.social'
 export const DEFAULT_SERVICE = PROD_SERVICE
 
 const HELP_DESK_LANG = 'en-us'

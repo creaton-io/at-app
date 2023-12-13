@@ -29,7 +29,7 @@ export function toNiceDomain(url: string): string {
   try {
     const urlp = new URL(url)
     if (`https://${urlp.host}` === PROD_SERVICE) {
-      return 'Bluesky Social'
+      return 'Creaton'
     }
     return urlp.host ? urlp.host : url
   } catch (e) {

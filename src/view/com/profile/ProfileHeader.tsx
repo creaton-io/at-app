@@ -780,4 +780,18 @@ const styles = StyleSheet.create({
 
   br40: {borderRadius: 40},
   br50: {borderRadius: 50},
+
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  image: {
+    flex: 1,
+    width: '100%',
+    backgroundColor: '#0553',
+  },
+
+  icon: {},
 })

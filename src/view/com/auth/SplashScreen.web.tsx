@@ -58,10 +58,10 @@ export const SplashScreen = ({
           ]}>
           <ErrorBoundary>
             <Text style={isMobileWeb ? styles.titleMobile : styles.title}>
-              Bluesky
+              Creaton
             </Text>
             <Text style={isMobileWeb ? styles.subtitleMobile : styles.subtitle}>
-              See what's next
+              Crypto x Social
             </Text>
             <View testID="signinOrCreateAccount" style={styles.btns}>
               <TouchableOpacity
@@ -99,18 +99,13 @@ function Footer({styles}: {styles: ReturnType<typeof useStyles>}) {
   return (
     <View style={[styles.footer, pal.view, pal.border]}>
       <TextLink
-        href="https://blueskyweb.xyz"
-        text="Business"
+        href="https://twitter.com/creaton_io"
+        text="Twitter"
         style={[styles.footerLink, pal.link]}
       />
       <TextLink
-        href="https://blueskyweb.xyz/blog"
-        text="Blog"
-        style={[styles.footerLink, pal.link]}
-      />
-      <TextLink
-        href="https://blueskyweb.xyz/join"
-        text="Jobs"
+        href="https://discord.gg/krSNH2SghC"
+        text="Discord"
         style={[styles.footerLink, pal.link]}
       />
     </View>
@@ -135,14 +130,14 @@ const useStyles = () => {
     },
     title: {
       textAlign: 'center',
-      color: colors.blue3,
+      color: colors.brandGreen,
       fontSize: 68,
       fontWeight: 'bold',
       paddingBottom: 10,
     },
     titleMobile: {
       textAlign: 'center',
-      color: colors.blue3,
+      color: colors.green3,
       fontSize: 58,
       fontWeight: 'bold',
     },
@@ -165,6 +160,7 @@ const useStyles = () => {
       gap: 20,
       justifyContent: 'center',
       paddingBottom: 40,
+      color: colors.brandPurple,
     },
     btn: {
       borderRadius: 30,

@@ -66,7 +66,7 @@ export function WelcomeMobile({next, skip}: Props) {
           <FontAwesomeIcon icon={'at'} size={36} color={pal.colors.link} />
           <View style={[styles.rowText]}>
             <Text type="lg-bold" style={[pal.text]}>
-              <Trans>Bluesky is open.</Trans>
+              <Trans>Creaton is onchain.</Trans>
             </Text>
             <Text type="lg-thin" style={[pal.text, s.pt2]}>
               <Trans>Never lose access to your followers and data.</Trans>

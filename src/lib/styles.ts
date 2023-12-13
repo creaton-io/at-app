@@ -45,11 +45,15 @@ export const colors = {
   purple4: '#6d00fa',
   purple5: '#380080',
 
+  green0: '#ceffc7',
   green1: '#c1ffb8',
   green2: '#27f406',
   green3: '#20bc07',
   green4: '#148203',
   green5: '#082b03',
+
+  brandGreen: '#44cf95',
+  brandPurple: '#434b95',
 
   unreadNotifBg: '#ebf6ff',
   brandBlue: '#0066FF',

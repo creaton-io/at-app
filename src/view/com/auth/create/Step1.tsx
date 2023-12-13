@@ -55,9 +55,9 @@ export function Step1({
         <Trans>This is the service that keeps you online.</Trans>
       </Text>
       <Option
-        testID="blueskyServerBtn"
+        testID="creatonServerBtn"
         isSelected={isDefaultSelected}
-        label="Bluesky"
+        label="Creaton"
         help="&nbsp;(default)"
         onPress={onPressDefault}
       />
@@ -83,6 +83,12 @@ export function Step1({
           />
           {LOGIN_INCLUDE_DEV_SERVERS && (
             <View style={[s.flexRow, s.mt10]}>
+              <Button
+                testID="blueskyhServerBtn"
+                type="default"
+                label="Official Bluesky Server"
+                onPress={() => onDebugChangeServiceUrl(BSKY_SERVICE)}
+              />
               <Button
                 testID="stagingServerBtn"
                 type="default"
