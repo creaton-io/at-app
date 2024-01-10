@@ -15,6 +15,7 @@ import {useLingui} from '@lingui/react'
 import {Plural, Trans, msg, plural} from '@lingui/macro'
 import {useSession} from '#/state/session'
 import {useInviteCodesQuery} from '#/state/queries/invites'
+import {HR} from '@expo/html-elements'
 
 export function DesktopRightNav() {
   const pal = usePalette('default')
@@ -30,6 +31,9 @@ export function DesktopRightNav() {
   return (
     <View style={[styles.rightNav, pal.view]}>
       <View style={{paddingVertical: 20}}>
+        <w3m-button />
+        <HR />
+
         <DesktopSearch />
 
         {hasSession && (

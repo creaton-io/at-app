@@ -55,6 +55,7 @@ import {useSession, getAgent} from '#/state/session'
 import {Shadow} from '#/state/cache/types'
 import {useRequireAuth} from '#/state/session'
 import {LabelInfo} from '../util/moderation/LabelInfo'
+import {useSignMessage} from 'wagmi'
 
 interface Props {
   profile: Shadow<AppBskyActorDefs.ProfileViewDetailed> | null
@@ -131,6 +132,7 @@ let ProfileHeaderLoaded = ({
   const [queueMute, queueUnmute] = useProfileMuteMutationQueue(profile)
   const [queueBlock, queueUnblock] = useProfileBlockMutationQueue(profile)
   const queryClient = useQueryClient()
+  const {signMessageAsync} = useSignMessage()
 
   /*
    * BEGIN handle bio facet resolution
@@ -327,6 +329,30 @@ let ProfileHeaderLoaded = ({
     })
   }, [track, openModal, profile])
 
+  const onPressLinkCrypto = React.useCallback(async () => {
+    // track('ProfileHeader:ReportAccountButtonClicked')
+    try {
+      const signed = await signMessageAsync({
+        message: 'Linking Creaton DID to crypto address',
+      })
+
+      await fetch('http://localhost:3000/jwt', {
+        method: 'POST',
+        body: JSON.stringify({
+          signed: signed,
+          accessJwt: currentAccount ? currentAccount.accessJwt : null,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      console.log(signed)
+    } catch (error) {
+      console.error('Failed to link crypto address', error)
+    }
+    // send signed + jwt to server, both should be enough proof
+  }, [signMessageAsync, currentAccount])
+
   const isMe = React.useMemo(
     () => currentAccount?.did === profile.did,
     [currentAccount, profile],
@@ -437,6 +463,8 @@ let ProfileHeaderLoaded = ({
   const followers = formatCount(profile.followersCount || 0)
   const pluralizedFollowers = pluralize(profile.followersCount || 0, 'follower')
 
+  console.log('jwt', currentAccount?.accessJwt)
+
   return (
     <View style={pal.view} pointerEvents="box-none">
       <View pointerEvents="none">
@@ -445,17 +473,31 @@ let ProfileHeaderLoaded = ({
       <View style={styles.content} pointerEvents="box-none">
         <View style={[styles.buttonsLine]} pointerEvents="box-none">
           {isMe ? (
-            <TouchableOpacity
-              testID="profileHeaderEditProfileButton"
-              onPress={onPressEditProfile}
-              style={[styles.btn, styles.mainBtn, pal.btn]}
-              accessibilityRole="button"
-              accessibilityLabel={_(msg`Edit profile`)}
-              accessibilityHint="Opens editor for profile display name, avatar, background image, and description">
-              <Text type="button" style={pal.text}>
-                <Trans>Edit Profile</Trans>
-              </Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                testID="profileHeaderEditProfileButton"
+                onPress={onPressEditProfile}
+                style={[styles.btn, styles.mainBtn, pal.btn]}
+                accessibilityRole="button"
+                accessibilityLabel={_(msg`Edit profile`)}
+                accessibilityHint="Opens editor for profile display name, avatar, background image, and description">
+                <Text type="button" style={pal.text}>
+                  <Trans>Edit Profile</Trans>
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                testID="profileHeaderConnectCryptoButton"
+                onPress={onPressLinkCrypto}
+                style={[styles.btn, styles.mainBtn, pal.btn]}
+                accessibilityRole="button"
+                accessibilityLabel={_(msg`Link crypto address`)}
+                accessibilityHint="Links crypto wallet to your Creaton account">
+                <Text type="button" style={pal.text}>
+                  <Trans>Link crypto address</Trans>
+                </Text>
+              </TouchableOpacity>
+            </>
           ) : profile.viewer?.blocking ? (
             profile.viewer?.blockingByList ? null : (
               <TouchableOpacity

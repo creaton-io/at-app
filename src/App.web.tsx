@@ -29,6 +29,28 @@ import {
 import {Provider as UnreadNotifsProvider} from 'state/queries/notifications/unread'
 import * as persisted from '#/state/persisted'
 
+import {createWeb3Modal, defaultWagmiConfig} from '@web3modal/wagmi/react'
+
+import {WagmiConfig} from 'wagmi'
+import {mainnet, polygonMumbai} from 'viem/chains'
+
+// 1. Get projectId at https://cloud.walletconnect.com
+const projectId = 'cfc0e32a6ba39613abc4432c1089498b'
+
+// 2. Create wagmiConfig
+const metadata = {
+  name: 'Web3Modal',
+  description: 'Web3Modal Example',
+  url: 'https://web3modal.com',
+  icons: ['https://avatars.githubusercontent.com/u/37784886'],
+}
+
+const chains = [mainnet, polygonMumbai]
+const wagmiConfig = defaultWagmiConfig({chains, projectId, metadata})
+
+// 3. Create modal
+createWeb3Modal({wagmiConfig, projectId, chains})
+
 function InnerApp() {
   const {isInitialLoad, currentAccount} = useSession()
   const {resumeSession} = useSessionApi()
@@ -89,7 +111,9 @@ function App() {
                 <ModalStateProvider>
                   <LightboxStateProvider>
                     <I18nProvider>
-                      <InnerApp />
+                      <WagmiConfig config={wagmiConfig}>
+                        <InnerApp />
+                      </WagmiConfig>
                     </I18nProvider>
                   </LightboxStateProvider>
                 </ModalStateProvider>
