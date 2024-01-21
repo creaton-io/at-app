@@ -6,11 +6,15 @@ import {
   View,
   ViewStyle,
 } from 'react-native'
-import {AppBskyFeedDefs, AppBskyFeedPost} from '@atproto/api'
+import {
+  AppBskyFeedDefs,
+  AppBskyFeedPost,
+  RichText as RichTextAPI,
+} from '@atproto/api'
 import {Text} from '../text/Text'
 import {PostDropdownBtn} from '../forms/PostDropdownBtn'
 import {HeartIcon, HeartIconSolid, CommentBottomArrow} from 'lib/icons'
-import {s, colors} from 'lib/styles'
+import {s} from 'lib/styles'
 import {pluralize} from 'lib/strings/helpers'
 import {useTheme} from 'lib/ThemeContext'
 import {RepostButton} from './RepostButton'
@@ -26,21 +30,28 @@ import {
 import {useComposerControls} from '#/state/shell/composer'
 import {Shadow} from '#/state/cache/types'
 import {useRequireAuth} from '#/state/session'
+import {msg} from '@lingui/macro'
+import {useLingui} from '@lingui/react'
 
 let PostCtrls = ({
   big,
   post,
   record,
+  richText,
+  showAppealLabelItem,
   style,
   onPressReply,
 }: {
   big?: boolean
   post: Shadow<AppBskyFeedDefs.PostView>
   record: AppBskyFeedPost.Record
+  richText: RichTextAPI
+  showAppealLabelItem?: boolean
   style?: StyleProp<ViewStyle>
   onPressReply: () => void
 }): React.ReactNode => {
   const theme = useTheme()
+  const {_} = useLingui()
   const {openComposer} = useComposerControls()
   const {closeModal} = useModalControls()
   const postLikeMutation = usePostLikeMutation()
@@ -174,13 +185,13 @@ let PostCtrls = ({
           requireAuth(() => onPressToggleLike())
         }}
         accessibilityRole="button"
-        accessibilityLabel={`${post.viewer?.like ? 'Unlike' : 'Like'} (${
-          post.likeCount
-        } ${pluralize(post.likeCount || 0, 'like')})`}
+        accessibilityLabel={`${
+          post.viewer?.like ? _(msg`Unlike`) : _(msg`Like`)
+        } (${post.likeCount} ${pluralize(post.likeCount || 0, 'like')})`}
         accessibilityHint=""
         hitSlop={big ? HITSLOP_20 : HITSLOP_10}>
         {post.viewer?.like ? (
-          <HeartIconSolid style={styles.ctrlIconLiked} size={big ? 22 : 16} />
+          <HeartIconSolid style={s.likeColor} size={big ? 22 : 16} />
         ) : (
           <HeartIcon
             style={[defaultCtrlColor, big ? styles.mt1 : undefined]}
@@ -193,7 +204,7 @@ let PostCtrls = ({
             testID="likeCount"
             style={
               post.viewer?.like
-                ? [s.bold, s.red3, s.f15, s.ml5]
+                ? [s.bold, s.likeColor, s.f15, s.ml5]
                 : [defaultCtrlColor, s.f15, s.ml5]
             }>
             {post.likeCount}
@@ -207,6 +218,8 @@ let PostCtrls = ({
           postCid={post.cid}
           postUri={post.uri}
           record={record}
+          richText={richText}
+          showAppealLabelItem={showAppealLabelItem}
           style={styles.ctrlPad}
         />
       )}
@@ -232,9 +245,6 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
     paddingLeft: 5,
     paddingRight: 5,
-  },
-  ctrlIconLiked: {
-    color: colors.like,
   },
   mt1: {
     marginTop: 1,

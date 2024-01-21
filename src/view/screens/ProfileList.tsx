@@ -1,12 +1,6 @@
 import React, {useCallback, useMemo} from 'react'
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native'
-import {useFocusEffect} from '@react-navigation/native'
+import {ActivityIndicator, Pressable, StyleSheet, View} from 'react-native'
+import {useFocusEffect, useIsFocused} from '@react-navigation/native'
 import {NativeStackScreenProps, CommonNavigatorParams} from 'lib/routes/types'
 import {useNavigation} from '@react-navigation/native'
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome'
@@ -22,6 +16,7 @@ import {EmptyState} from 'view/com/util/EmptyState'
 import {RichText} from 'view/com/util/text/RichText'
 import {Button} from 'view/com/util/forms/Button'
 import {TextLink} from 'view/com/util/Link'
+import {ListRef} from 'view/com/util/List'
 import * as Toast from 'view/com/util/Toast'
 import {LoadLatestBtn} from 'view/com/util/load-latest/LoadLatestBtn'
 import {FAB} from 'view/com/util/fab/FAB'
@@ -31,7 +26,6 @@ import {usePalette} from 'lib/hooks/usePalette'
 import {useSetTitle} from 'lib/hooks/useSetTitle'
 import {useWebMediaQueries} from 'lib/hooks/useWebMediaQueries'
 import {RQKEY as FEED_RQKEY} from '#/state/queries/post-feed'
-import {OnScrollHandler} from 'lib/hooks/useOnMainScroll'
 import {NavigationProp} from 'lib/routes/types'
 import {toShareUrl} from 'lib/strings/url-helpers'
 import {shareUrl} from 'lib/sharing'
@@ -63,6 +57,7 @@ import {
 } from '#/state/queries/preferences'
 import {logger} from '#/logger'
 import {useAnalytics} from '#/lib/analytics/analytics'
+import {listenSoftReset} from '#/state/events'
 
 const SECTION_TITLES_CURATE = ['Posts', 'About']
 const SECTION_TITLES_MOD = ['About']
@@ -73,6 +68,7 @@ interface SectionRef {
 
 type Props = NativeStackScreenProps<CommonNavigatorParams, 'ProfileList'>
 export function ProfileListScreen(props: Props) {
+  const {_} = useLingui()
   const {name: handleOrDid, rkey} = props.route.params
   const {data: resolvedUri, error: resolveError} = useResolveUriQuery(
     AtUri.make(handleOrDid, 'app.bsky.graph.list', rkey).toString(),
@@ -83,7 +79,9 @@ export function ProfileListScreen(props: Props) {
     return (
       <CenteredView>
         <ErrorScreen
-          error={`We're sorry, but we were unable to resolve this list. If this persists, please contact the list creator, @${handleOrDid}.`}
+          error={_(
+            msg`We're sorry, but we were unable to resolve this list. If this persists, please contact the list creator, @${handleOrDid}.`,
+          )}
         />
       </CenteredView>
     )
@@ -121,6 +119,7 @@ function ProfileListScreenLoaded({
   const aboutSectionRef = React.useRef<SectionRef>(null)
   const {openModal} = useModalControls()
   const isCurateList = list.purpose === 'app.bsky.graph.defs#curatelist'
+  const isScreenFocused = useIsFocused()
 
   useSetTitle(list.name)
 
@@ -165,36 +164,22 @@ function ProfileListScreenLoaded({
           isHeaderReady={true}
           renderHeader={renderHeader}
           onCurrentPageSelected={onCurrentPageSelected}>
-          {({
-            onScroll,
-            headerHeight,
-            isScrolledDown,
-            scrollElRef,
-            isFocused,
-          }) => (
+          {({headerHeight, scrollElRef, isFocused}) => (
             <FeedSection
               ref={feedSectionRef}
               feed={`list|${uri}`}
-              scrollElRef={
-                scrollElRef as React.MutableRefObject<FlatList<any> | null>
-              }
-              onScroll={onScroll}
+              scrollElRef={scrollElRef as ListRef}
               headerHeight={headerHeight}
-              isScrolledDown={isScrolledDown}
-              isFocused={isFocused}
+              isFocused={isScreenFocused && isFocused}
             />
           )}
-          {({onScroll, headerHeight, isScrolledDown, scrollElRef}) => (
+          {({headerHeight, scrollElRef}) => (
             <AboutSection
               ref={aboutSectionRef}
-              scrollElRef={
-                scrollElRef as React.MutableRefObject<FlatList<any> | null>
-              }
+              scrollElRef={scrollElRef as ListRef}
               list={list}
               onPressAddUser={onPressAddUser}
-              onScroll={onScroll}
               headerHeight={headerHeight}
-              isScrolledDown={isScrolledDown}
             />
           )}
         </PagerWithHeader>
@@ -221,16 +206,12 @@ function ProfileListScreenLoaded({
         items={SECTION_TITLES_MOD}
         isHeaderReady={true}
         renderHeader={renderHeader}>
-        {({onScroll, headerHeight, isScrolledDown, scrollElRef}) => (
+        {({headerHeight, scrollElRef}) => (
           <AboutSection
             list={list}
-            scrollElRef={
-              scrollElRef as React.MutableRefObject<FlatList<any> | null>
-            }
+            scrollElRef={scrollElRef as ListRef}
             onPressAddUser={onPressAddUser}
-            onScroll={onScroll}
             headerHeight={headerHeight}
-            isScrolledDown={isScrolledDown}
           />
         )}
       </PagerWithHeader>
@@ -282,10 +263,10 @@ function Header({rkey, list}: {rkey: string; list: AppBskyGraphDefs.ListView}) {
         await pinFeed({uri: list.uri})
       }
     } catch (e) {
-      Toast.show('There was an issue contacting the server')
+      Toast.show(_(msg`There was an issue contacting the server`))
       logger.error('Failed to toggle pinned feed', {error: e})
     }
-  }, [list.uri, isPinned, pinFeed, unpinFeed])
+  }, [list.uri, isPinned, pinFeed, unpinFeed, _])
 
   const onSubscribeMute = useCallback(() => {
     openModal({
@@ -294,15 +275,17 @@ function Header({rkey, list}: {rkey: string; list: AppBskyGraphDefs.ListView}) {
       message: _(
         msg`Muting is private. Muted accounts can interact with you, but you will not see their posts or receive notifications from them.`,
       ),
-      confirmBtnText: 'Mute this List',
+      confirmBtnText: _(msg`Mute this List`),
       async onPressConfirm() {
         try {
           await listMuteMutation.mutateAsync({uri: list.uri, mute: true})
-          Toast.show('List muted')
+          Toast.show(_(msg`List muted`))
           track('Lists:Mute')
         } catch {
           Toast.show(
-            'There was an issue. Please check your internet connection and try again.',
+            _(
+              msg`There was an issue. Please check your internet connection and try again.`,
+            ),
           )
         }
       },
@@ -315,14 +298,16 @@ function Header({rkey, list}: {rkey: string; list: AppBskyGraphDefs.ListView}) {
   const onUnsubscribeMute = useCallback(async () => {
     try {
       await listMuteMutation.mutateAsync({uri: list.uri, mute: false})
-      Toast.show('List unmuted')
+      Toast.show(_(msg`List unmuted`))
       track('Lists:Unmute')
     } catch {
       Toast.show(
-        'There was an issue. Please check your internet connection and try again.',
+        _(
+          msg`There was an issue. Please check your internet connection and try again.`,
+        ),
       )
     }
-  }, [list, listMuteMutation, track])
+  }, [list, listMuteMutation, track, _])
 
   const onSubscribeBlock = useCallback(() => {
     openModal({
@@ -331,15 +316,17 @@ function Header({rkey, list}: {rkey: string; list: AppBskyGraphDefs.ListView}) {
       message: _(
         msg`Blocking is public. Blocked accounts cannot reply in your threads, mention you, or otherwise interact with you.`,
       ),
-      confirmBtnText: 'Block this List',
+      confirmBtnText: _(msg`Block this List`),
       async onPressConfirm() {
         try {
           await listBlockMutation.mutateAsync({uri: list.uri, block: true})
-          Toast.show('List blocked')
+          Toast.show(_(msg`List blocked`))
           track('Lists:Block')
         } catch {
           Toast.show(
-            'There was an issue. Please check your internet connection and try again.',
+            _(
+              msg`There was an issue. Please check your internet connection and try again.`,
+            ),
           )
         }
       },
@@ -352,14 +339,16 @@ function Header({rkey, list}: {rkey: string; list: AppBskyGraphDefs.ListView}) {
   const onUnsubscribeBlock = useCallback(async () => {
     try {
       await listBlockMutation.mutateAsync({uri: list.uri, block: false})
-      Toast.show('List unblocked')
+      Toast.show(_(msg`List unblocked`))
       track('Lists:Unblock')
     } catch {
       Toast.show(
-        'There was an issue. Please check your internet connection and try again.',
+        _(
+          msg`There was an issue. Please check your internet connection and try again.`,
+        ),
       )
     }
-  }, [list, listBlockMutation, track])
+  }, [list, listBlockMutation, track, _])
 
   const onPressEdit = useCallback(() => {
     openModal({
@@ -375,7 +364,7 @@ function Header({rkey, list}: {rkey: string; list: AppBskyGraphDefs.ListView}) {
       message: _(msg`Are you sure?`),
       async onPressConfirm() {
         await listDeleteMutation.mutateAsync({uri: list.uri})
-        Toast.show('List deleted')
+        Toast.show(_(msg`List deleted`))
         track('Lists:Delete')
         if (navigation.canGoBack()) {
           navigation.goBack()
@@ -567,7 +556,7 @@ function Header({rkey, list}: {rkey: string; list: AppBskyGraphDefs.ListView}) {
         <Button
           testID={isPinned ? 'unpinBtn' : 'pinBtn'}
           type={isPinned ? 'default' : 'inverted'}
-          label={isPinned ? 'Unpin' : 'Pin to home'}
+          label={isPinned ? _(msg`Unpin`) : _(msg`Pin to home`)}
           onPress={onTogglePinned}
           disabled={isPending}
         />
@@ -576,14 +565,14 @@ function Header({rkey, list}: {rkey: string; list: AppBskyGraphDefs.ListView}) {
           <Button
             testID="unblockBtn"
             type="default"
-            label="Unblock"
+            label={_(msg`Unblock`)}
             onPress={onUnsubscribeBlock}
           />
         ) : isMuting ? (
           <Button
             testID="unmuteBtn"
             type="default"
-            label="Unmute"
+            label={_(msg`Unmute`)}
             onPress={onUnsubscribeMute}
           />
         ) : (
@@ -615,19 +604,17 @@ function Header({rkey, list}: {rkey: string; list: AppBskyGraphDefs.ListView}) {
 
 interface FeedSectionProps {
   feed: FeedDescriptor
-  onScroll: OnScrollHandler
   headerHeight: number
-  isScrolledDown: boolean
-  scrollElRef: React.MutableRefObject<FlatList<any> | null>
+  scrollElRef: ListRef
   isFocused: boolean
 }
 const FeedSection = React.forwardRef<SectionRef, FeedSectionProps>(
-  function FeedSectionImpl(
-    {feed, scrollElRef, onScroll, headerHeight, isScrolledDown, isFocused},
-    ref,
-  ) {
+  function FeedSectionImpl({feed, scrollElRef, headerHeight, isFocused}, ref) {
     const queryClient = useQueryClient()
     const [hasNew, setHasNew] = React.useState(false)
+    const [isScrolledDown, setIsScrolledDown] = React.useState(false)
+    const isScreenFocused = useIsFocused()
+    const {_} = useLingui()
 
     const onScrollToTop = useCallback(() => {
       scrollElRef.current?.scrollToOffset({
@@ -641,9 +628,16 @@ const FeedSection = React.forwardRef<SectionRef, FeedSectionProps>(
       scrollToTop: onScrollToTop,
     }))
 
+    React.useEffect(() => {
+      if (!isScreenFocused) {
+        return
+      }
+      return listenSoftReset(onScrollToTop)
+    }, [onScrollToTop, isScreenFocused])
+
     const renderPostsEmpty = useCallback(() => {
-      return <EmptyState icon="feed" message="This feed is empty!" />
-    }, [])
+      return <EmptyState icon="feed" message={_(msg`This feed is empty!`)} />
+    }, [_])
 
     return (
       <View>
@@ -651,18 +645,18 @@ const FeedSection = React.forwardRef<SectionRef, FeedSectionProps>(
           testID="listFeed"
           enabled={isFocused}
           feed={feed}
-          pollInterval={30e3}
+          pollInterval={60e3}
+          disablePoll={hasNew}
           scrollElRef={scrollElRef}
           onHasNew={setHasNew}
-          onScroll={onScroll}
-          scrollEventThrottle={1}
+          onScrolledDownChange={setIsScrolledDown}
           renderEmptyState={renderPostsEmpty}
           headerOffset={headerHeight}
         />
         {(isScrolledDown || hasNew) && (
           <LoadLatestBtn
             onPress={onScrollToTop}
-            label="Load new posts"
+            label={_(msg`Load new posts`)}
             showIndicator={hasNew}
           />
         )}
@@ -674,20 +668,19 @@ const FeedSection = React.forwardRef<SectionRef, FeedSectionProps>(
 interface AboutSectionProps {
   list: AppBskyGraphDefs.ListView
   onPressAddUser: () => void
-  onScroll: OnScrollHandler
   headerHeight: number
-  isScrolledDown: boolean
-  scrollElRef: React.MutableRefObject<FlatList<any> | null>
+  scrollElRef: ListRef
 }
 const AboutSection = React.forwardRef<SectionRef, AboutSectionProps>(
   function AboutSectionImpl(
-    {list, onPressAddUser, onScroll, headerHeight, isScrolledDown, scrollElRef},
+    {list, onPressAddUser, headerHeight, scrollElRef},
     ref,
   ) {
     const pal = usePalette('default')
     const {_} = useLingui()
     const {isMobile} = useWebMediaQueries()
     const {currentAccount} = useSession()
+    const [isScrolledDown, setIsScrolledDown] = React.useState(false)
     const isCurateList = list.purpose === 'app.bsky.graph.defs#curatelist'
     const isOwner = list.creator.did === currentAccount?.did
 
@@ -741,15 +734,30 @@ const AboutSection = React.forwardRef<SectionRef, AboutSectionProps>(
               </Text>
             )}
             <Text type="md" style={[pal.textLight]} numberOfLines={1}>
-              {isCurateList ? 'User list' : 'Moderation list'} by{' '}
-              {isOwner ? (
-                'you'
+              {isCurateList ? (
+                isOwner ? (
+                  <Trans>User list by you</Trans>
+                ) : (
+                  <Trans>
+                    User list by{' '}
+                    <TextLink
+                      text={sanitizeHandle(list.creator.handle || '', '@')}
+                      href={makeProfileLink(list.creator)}
+                      style={pal.textLight}
+                    />
+                  </Trans>
+                )
+              ) : isOwner ? (
+                <Trans>Moderation list by you</Trans>
               ) : (
-                <TextLink
-                  text={sanitizeHandle(list.creator.handle || '', '@')}
-                  href={makeProfileLink(list.creator)}
-                  style={pal.textLight}
-                />
+                <Trans>
+                  Moderation list by{' '}
+                  <TextLink
+                    text={sanitizeHandle(list.creator.handle || '', '@')}
+                    href={makeProfileLink(list.creator)}
+                    style={pal.textLight}
+                  />
+                </Trans>
               )}
             </Text>
           </View>
@@ -802,11 +810,11 @@ const AboutSection = React.forwardRef<SectionRef, AboutSectionProps>(
       return (
         <EmptyState
           icon="users-slash"
-          message="This list is empty!"
+          message={_(msg`This list is empty!`)}
           style={{paddingTop: 40}}
         />
       )
-    }, [])
+    }, [_])
 
     return (
       <View>
@@ -817,13 +825,12 @@ const AboutSection = React.forwardRef<SectionRef, AboutSectionProps>(
           renderHeader={renderHeader}
           renderEmptyState={renderEmptyState}
           headerOffset={headerHeight}
-          onScroll={onScroll}
-          scrollEventThrottle={1}
+          onScrolledDownChange={setIsScrolledDown}
         />
         {isScrolledDown && (
           <LoadLatestBtn
             onPress={onScrollToTop}
-            label="Scroll to top"
+            label={_(msg`Scroll to top`)}
             showIndicator={false}
           />
         )}
@@ -867,7 +874,7 @@ function ErrorScreen({error}: {error: string}) {
         <Button
           type="default"
           accessibilityLabel={_(msg`Go Back`)}
-          accessibilityHint="Return to previous page"
+          accessibilityHint={_(msg`Return to previous page`)}
           onPress={onPressBack}
           style={{flexShrink: 1}}>
           <Text type="button" style={pal.text}>

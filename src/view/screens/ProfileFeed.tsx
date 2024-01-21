@@ -1,25 +1,20 @@
 import React, {useMemo, useCallback} from 'react'
-import {
-  Dimensions,
-  StyleSheet,
-  View,
-  ActivityIndicator,
-  FlatList,
-} from 'react-native'
+import {Dimensions, StyleSheet, View, ActivityIndicator} from 'react-native'
 import {NativeStackScreenProps} from '@react-navigation/native-stack'
-import {useNavigation} from '@react-navigation/native'
+import {useIsFocused, useNavigation} from '@react-navigation/native'
 import {useQueryClient} from '@tanstack/react-query'
 import {usePalette} from 'lib/hooks/usePalette'
 import {HeartIcon, HeartIconSolid} from 'lib/icons'
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome'
 import {CommonNavigatorParams} from 'lib/routes/types'
 import {makeRecordUri} from 'lib/strings/url-helpers'
-import {colors, s} from 'lib/styles'
+import {s} from 'lib/styles'
 import {FeedDescriptor} from '#/state/queries/post-feed'
 import {PagerWithHeader} from 'view/com/pager/PagerWithHeader'
 import {ProfileSubpageHeader} from 'view/com/profile/ProfileSubpageHeader'
 import {Feed} from 'view/com/posts/Feed'
 import {TextLink} from 'view/com/util/Link'
+import {ListRef} from 'view/com/util/List'
 import {Button} from 'view/com/util/forms/Button'
 import {Text} from 'view/com/util/text/Text'
 import {RichText} from 'view/com/util/text/RichText'
@@ -29,12 +24,13 @@ import {EmptyState} from 'view/com/util/EmptyState'
 import * as Toast from 'view/com/util/Toast'
 import {useSetTitle} from 'lib/hooks/useSetTitle'
 import {RQKEY as FEED_RQKEY} from '#/state/queries/post-feed'
-import {OnScrollHandler} from 'lib/hooks/useOnMainScroll'
 import {shareUrl} from 'lib/sharing'
 import {toShareUrl} from 'lib/strings/url-helpers'
 import {Haptics} from 'lib/haptics'
 import {useAnalytics} from 'lib/analytics/analytics'
 import {NativeDropdown, DropdownItem} from 'view/com/util/forms/NativeDropdown'
+import {useScrollHandlers} from '#/lib/ScrollContext'
+import {useAnimatedScrollHandler} from '#/lib/hooks/useAnimatedScrollHandler_FIXED'
 import {makeCustomFeedLink} from 'lib/routes/links'
 import {pluralize} from 'lib/strings/helpers'
 import {CenteredView, ScrollView} from 'view/com/util/Views'
@@ -46,12 +42,7 @@ import {logger} from '#/logger'
 import {Trans, msg} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 import {useModalControls} from '#/state/modals'
-import {useAnimatedScrollHandler} from '#/lib/hooks/useAnimatedScrollHandler_FIXED'
-import {
-  useFeedSourceInfoQuery,
-  FeedSourceFeedInfo,
-  useIsFeedPublicQuery,
-} from '#/state/queries/feed'
+import {useFeedSourceInfoQuery, FeedSourceFeedInfo} from '#/state/queries/feed'
 import {useResolveUriQuery} from '#/state/queries/resolve-uri'
 import {
   UsePreferencesQueryResponse,
@@ -66,6 +57,7 @@ import {useLikeMutation, useUnlikeMutation} from '#/state/queries/like'
 import {useComposerControls} from '#/state/shell/composer'
 import {truncateAndInvalidate} from '#/state/queries/util'
 import {isNative} from '#/platform/detection'
+import {listenSoftReset} from '#/state/events'
 
 const SECTION_TITLES = ['Posts', 'About']
 
@@ -137,10 +129,8 @@ export function ProfileFeedScreen(props: Props) {
 function ProfileFeedScreenIntermediate({feedUri}: {feedUri: string}) {
   const {data: preferences} = usePreferencesQuery()
   const {data: info} = useFeedSourceInfoQuery({uri: feedUri})
-  const {isLoading: isPublicStatusLoading, data: isPublicResponse} =
-    useIsFeedPublicQuery({uri: feedUri})
 
-  if (!preferences || !info || isPublicStatusLoading) {
+  if (!preferences || !info) {
     return (
       <CenteredView>
         <View style={s.p20}>
@@ -154,7 +144,6 @@ function ProfileFeedScreenIntermediate({feedUri}: {feedUri: string}) {
     <ProfileFeedScreenInner
       preferences={preferences}
       feedInfo={info as FeedSourceFeedInfo}
-      isPublicResponse={isPublicResponse}
     />
   )
 }
@@ -162,11 +151,9 @@ function ProfileFeedScreenIntermediate({feedUri}: {feedUri: string}) {
 export function ProfileFeedScreenInner({
   preferences,
   feedInfo,
-  isPublicResponse,
 }: {
   preferences: UsePreferencesQueryResponse
   feedInfo: FeedSourceFeedInfo
-  isPublicResponse: ReturnType<typeof useIsFeedPublicQuery>['data']
 }) {
   const {_} = useLingui()
   const pal = usePalette('default')
@@ -175,6 +162,7 @@ export function ProfileFeedScreenInner({
   const {openComposer} = useComposerControls()
   const {track} = useAnalytics()
   const feedSectionRef = React.useRef<SectionRef>(null)
+  const isScreenFocused = useIsFocused()
 
   const {
     mutateAsync: saveFeed,
@@ -210,6 +198,9 @@ export function ProfileFeedScreenInner({
 
   useSetTitle(feedInfo?.displayName)
 
+  // event handlers
+  //
+
   const onToggleSaved = React.useCallback(async () => {
     try {
       Haptics.default()
@@ -223,11 +214,21 @@ export function ProfileFeedScreenInner({
       }
     } catch (err) {
       Toast.show(
-        'There was an an issue updating your feeds, please check your internet connection and try again.',
+        _(
+          msg`There was an an issue updating your feeds, please check your internet connection and try again.`,
+        ),
       )
       logger.error('Failed up update feeds', {error: err})
     }
-  }, [feedInfo, isSaved, saveFeed, removeFeed, resetSaveFeed, resetRemoveFeed])
+  }, [
+    feedInfo,
+    isSaved,
+    saveFeed,
+    removeFeed,
+    resetSaveFeed,
+    resetRemoveFeed,
+    _,
+  ])
 
   const onTogglePinned = React.useCallback(async () => {
     try {
@@ -241,10 +242,10 @@ export function ProfileFeedScreenInner({
         resetPinFeed()
       }
     } catch (e) {
-      Toast.show('There was an issue contacting the server')
+      Toast.show(_(msg`There was an issue contacting the server`))
       logger.error('Failed to toggle pinned feed', {error: e})
     }
-  }, [isPinned, feedInfo, pinFeed, unpinFeed, resetPinFeed, resetUnpinFeed])
+  }, [isPinned, feedInfo, pinFeed, unpinFeed, resetPinFeed, resetUnpinFeed, _])
 
   const onPressShare = React.useCallback(() => {
     const url = toShareUrl(feedInfo.route.href)
@@ -350,7 +351,7 @@ export function ProfileFeedScreenInner({
             <Button
               disabled={isSavePending || isRemovePending}
               type="default"
-              label={isSaved ? 'Unsave' : 'Save'}
+              label={isSaved ? _(msg`Unsave`) : _(msg`Save`)}
               onPress={onToggleSaved}
               style={styles.btn}
             />
@@ -358,7 +359,7 @@ export function ProfileFeedScreenInner({
               testID={isPinned ? 'unpinBtn' : 'pinBtn'}
               disabled={isPinPending || isUnpinPending}
               type={isPinned ? 'default' : 'inverted'}
-              label={isPinned ? 'Unpin' : 'Pin to home'}
+              label={isPinned ? _(msg`Unpin`) : _(msg`Pin to home`)}
               onPress={onTogglePinned}
               style={styles.btn}
             />
@@ -403,32 +404,21 @@ export function ProfileFeedScreenInner({
         isHeaderReady={true}
         renderHeader={renderHeader}
         onCurrentPageSelected={onCurrentPageSelected}>
-        {({onScroll, headerHeight, isScrolledDown, scrollElRef, isFocused}) =>
-          isPublicResponse?.isPublic ? (
-            <FeedSection
-              ref={feedSectionRef}
-              feed={`feedgen|${feedInfo.uri}`}
-              onScroll={onScroll}
-              headerHeight={headerHeight}
-              isScrolledDown={isScrolledDown}
-              scrollElRef={
-                scrollElRef as React.MutableRefObject<FlatList<any> | null>
-              }
-              isFocused={isFocused}
-            />
-          ) : (
-            <CenteredView sideBorders style={[{paddingTop: headerHeight}]}>
-              <NonPublicFeedMessage rawError={isPublicResponse?.error} />
-            </CenteredView>
-          )
-        }
-        {({onScroll, headerHeight, scrollElRef}) => (
+        {({headerHeight, scrollElRef, isFocused}) => (
+          <FeedSection
+            ref={feedSectionRef}
+            feed={`feedgen|${feedInfo.uri}`}
+            headerHeight={headerHeight}
+            scrollElRef={scrollElRef as ListRef}
+            isFocused={isScreenFocused && isFocused}
+          />
+        )}
+        {({headerHeight, scrollElRef}) => (
           <AboutSection
             feedOwnerDid={feedInfo.creatorDid}
             feedRkey={feedInfo.route.params.rkey}
             feedInfo={feedInfo}
             headerHeight={headerHeight}
-            onScroll={onScroll}
             scrollElRef={
               scrollElRef as React.MutableRefObject<ScrollView | null>
             }
@@ -456,60 +446,19 @@ export function ProfileFeedScreenInner({
   )
 }
 
-function NonPublicFeedMessage({rawError}: {rawError?: Error}) {
-  const pal = usePalette('default')
-
-  return (
-    <View
-      style={[
-        pal.border,
-        {
-          padding: 18,
-          borderTopWidth: 1,
-          minHeight: Dimensions.get('window').height * 1.5,
-        },
-      ]}>
-      <View
-        style={[
-          pal.viewLight,
-          {
-            padding: 12,
-            borderRadius: 8,
-            gap: 12,
-          },
-        ]}>
-        <Text style={[pal.text]}>
-          <Trans>
-            Looks like this feed is only available to users with a Bluesky
-            account. Please sign up or sign in to view this feed!
-          </Trans>
-        </Text>
-
-        {rawError?.message && (
-          <Text style={pal.textLight}>
-            <Trans>Message from server</Trans>: {rawError.message}
-          </Text>
-        )}
-      </View>
-    </View>
-  )
-}
-
 interface FeedSectionProps {
   feed: FeedDescriptor
-  onScroll: OnScrollHandler
   headerHeight: number
-  isScrolledDown: boolean
-  scrollElRef: React.MutableRefObject<FlatList<any> | null>
+  scrollElRef: ListRef
   isFocused: boolean
 }
 const FeedSection = React.forwardRef<SectionRef, FeedSectionProps>(
-  function FeedSectionImpl(
-    {feed, onScroll, headerHeight, isScrolledDown, scrollElRef, isFocused},
-    ref,
-  ) {
+  function FeedSectionImpl({feed, headerHeight, scrollElRef, isFocused}, ref) {
+    const {_} = useLingui()
     const [hasNew, setHasNew] = React.useState(false)
+    const [isScrolledDown, setIsScrolledDown] = React.useState(false)
     const queryClient = useQueryClient()
+    const isScreenFocused = useIsFocused()
 
     const onScrollToTop = useCallback(() => {
       scrollElRef.current?.scrollToOffset({
@@ -524,27 +473,34 @@ const FeedSection = React.forwardRef<SectionRef, FeedSectionProps>(
       scrollToTop: onScrollToTop,
     }))
 
+    React.useEffect(() => {
+      if (!isScreenFocused) {
+        return
+      }
+      return listenSoftReset(onScrollToTop)
+    }, [onScrollToTop, isScreenFocused])
+
     const renderPostsEmpty = useCallback(() => {
-      return <EmptyState icon="feed" message="This feed is empty!" />
-    }, [])
+      return <EmptyState icon="feed" message={_(msg`This feed is empty!`)} />
+    }, [_])
 
     return (
       <View>
         <Feed
           enabled={isFocused}
           feed={feed}
-          pollInterval={30e3}
+          pollInterval={60e3}
+          disablePoll={hasNew}
           scrollElRef={scrollElRef}
           onHasNew={setHasNew}
-          onScroll={onScroll}
-          scrollEventThrottle={5}
+          onScrolledDownChange={setIsScrolledDown}
           renderEmptyState={renderPostsEmpty}
           headerOffset={headerHeight}
         />
         {(isScrolledDown || hasNew) && (
           <LoadLatestBtn
             onPress={onScrollToTop}
-            label="Load new posts"
+            label={_(msg`Load new posts`)}
             showIndicator={hasNew}
           />
         )}
@@ -558,7 +514,6 @@ function AboutSection({
   feedRkey,
   feedInfo,
   headerHeight,
-  onScroll,
   scrollElRef,
   isOwner,
 }: {
@@ -566,13 +521,13 @@ function AboutSection({
   feedRkey: string
   feedInfo: FeedSourceFeedInfo
   headerHeight: number
-  onScroll: OnScrollHandler
   scrollElRef: React.MutableRefObject<ScrollView | null>
   isOwner: boolean
 }) {
   const pal = usePalette('default')
   const {_} = useLingui()
-  const scrollHandler = useAnimatedScrollHandler(onScroll)
+  const scrollHandlers = useScrollHandlers()
+  const onScroll = useAnimatedScrollHandler(scrollHandlers)
   const [likeUri, setLikeUri] = React.useState(feedInfo.likeUri)
   const {hasSession} = useSession()
   const {track} = useAnalytics()
@@ -599,21 +554,23 @@ function AboutSection({
       }
     } catch (err) {
       Toast.show(
-        'There was an an issue contacting the server, please check your internet connection and try again.',
+        _(
+          msg`There was an an issue contacting the server, please check your internet connection and try again.`,
+        ),
       )
       logger.error('Failed up toggle like', {error: err})
     }
-  }, [likeUri, isLiked, feedInfo, likeFeed, unlikeFeed, track])
+  }, [likeUri, isLiked, feedInfo, likeFeed, unlikeFeed, track, _])
 
   return (
     <ScrollView
       ref={scrollElRef}
+      onScroll={onScroll}
       scrollEventThrottle={1}
       contentContainerStyle={{
         paddingTop: headerHeight,
         minHeight: Dimensions.get('window').height * 1.5,
-      }}
-      onScroll={scrollHandler}>
+      }}>
       <View
         style={[
           {
@@ -646,7 +603,7 @@ function AboutSection({
             onPress={onToggleLiked}
             style={{paddingHorizontal: 10}}>
             {isLiked ? (
-              <HeartIconSolid size={19} style={styles.liked} />
+              <HeartIconSolid size={19} style={s.likeColor} />
             ) : (
               <HeartIcon strokeWidth={3} size={19} style={pal.textLight} />
             )}
@@ -654,24 +611,28 @@ function AboutSection({
           {typeof likeCount === 'number' && (
             <TextLink
               href={makeCustomFeedLink(feedOwnerDid, feedRkey, 'liked-by')}
-              text={`Liked by ${likeCount} ${pluralize(likeCount, 'user')}`}
+              text={_(
+                msg`Liked by ${likeCount} ${pluralize(likeCount, 'user')}`,
+              )}
               style={[pal.textLight, s.semiBold]}
             />
           )}
         </View>
         <Text type="md" style={[pal.textLight]} numberOfLines={1}>
-          Created by{' '}
           {isOwner ? (
-            'you'
+            <Trans>Created by you</Trans>
           ) : (
-            <TextLink
-              text={sanitizeHandle(feedInfo.creatorHandle, '@')}
-              href={makeProfileLink({
-                did: feedInfo.creatorDid,
-                handle: feedInfo.creatorHandle,
-              })}
-              style={pal.textLight}
-            />
+            <Trans>
+              Created by{' '}
+              <TextLink
+                text={sanitizeHandle(feedInfo.creatorHandle, '@')}
+                href={makeProfileLink({
+                  did: feedInfo.creatorDid,
+                  handle: feedInfo.creatorHandle,
+                })}
+                style={pal.textLight}
+              />
+            </Trans>
           )}
         </Text>
       </View>
@@ -688,9 +649,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 50,
     marginLeft: 6,
-  },
-  liked: {
-    color: colors.red3,
   },
   notFoundContainer: {
     margin: 10,

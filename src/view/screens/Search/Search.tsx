@@ -3,12 +3,12 @@ import {
   View,
   StyleSheet,
   ActivityIndicator,
-  RefreshControl,
   TextInput,
   Pressable,
   Platform,
 } from 'react-native'
-import {FlatList, ScrollView, CenteredView} from '#/view/com/util/Views'
+import {ScrollView, CenteredView} from '#/view/com/util/Views'
+import {List} from '#/view/com/util/List'
 import {AppBskyActorDefs, AppBskyFeedDefs, moderateProfile} from '@atproto/api'
 import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
@@ -42,9 +42,13 @@ import {useSetDrawerOpen} from '#/state/shell'
 import {useAnalytics} from '#/lib/analytics/analytics'
 import {MagnifyingGlassIcon} from '#/lib/icons'
 import {useModerationOpts} from '#/state/queries/preferences'
-import {SearchResultCard} from '#/view/shell/desktop/Search'
+import {
+  MATCH_HANDLE,
+  SearchLinkCard,
+  SearchProfileCard,
+} from '#/view/shell/desktop/Search'
 import {useSetMinimalShellMode, useSetDrawerSwipeDisabled} from '#/state/shell'
-import {isWeb} from '#/platform/detection'
+import {isNative, isWeb} from '#/platform/detection'
 import {listenSoftReset} from '#/state/events'
 import {s} from '#/lib/styles'
 
@@ -83,9 +87,7 @@ function EmptyState({message, error}: {message: string; error?: string}) {
         },
       ]}>
       <View style={[pal.viewLight, {padding: 18, borderRadius: 8}]}>
-        <Text style={[pal.text]}>
-          <Trans>{message}</Trans>
-        </Text>
+        <Text style={[pal.text]}>{message}</Text>
 
         {error && (
           <>
@@ -155,13 +157,15 @@ function SearchScreenSuggestedFollows() {
   }, [currentAccount, setSuggestions, getSuggestedFollowsByActor])
 
   return suggestions.length ? (
-    <FlatList
+    <List
       data={suggestions}
       renderItem={({item}) => <ProfileCardWithFollowBtn profile={item} noBg />}
       keyExtractor={item => item.did}
       // @ts-ignore web only -prf
       desktopFixedHeight
       contentContainerStyle={{paddingBottom: 1200}}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
     />
   ) : (
     <CenteredView sideBorders style={[pal.border, s.hContentRegion]}>
@@ -184,7 +188,6 @@ type SearchResultSlice =
 
 function SearchScreenPostResults({query}: {query: string}) {
   const {_} = useLingui()
-  const pal = usePalette('default')
   const [isPTR, setIsPTR] = React.useState(false)
   const {
     isFetched,
@@ -213,12 +216,17 @@ function SearchScreenPostResults({query}: {query: string}) {
   const items = React.useMemo(() => {
     let temp: SearchResultSlice[] = []
 
+    const seenUris = new Set()
     for (const post of posts) {
+      if (seenUris.has(post.uri)) {
+        continue
+      }
       temp.push({
         type: 'post',
         key: post.uri,
         post,
       })
+      seenUris.add(post.uri)
     }
 
     if (isFetchingNextPage) {
@@ -243,7 +251,7 @@ function SearchScreenPostResults({query}: {query: string}) {
       {isFetched ? (
         <>
           {posts.length ? (
-            <FlatList
+            <List
               data={items}
               renderItem={({item}) => {
                 if (item.type === 'post') {
@@ -253,14 +261,8 @@ function SearchScreenPostResults({query}: {query: string}) {
                 }
               }}
               keyExtractor={item => item.key}
-              refreshControl={
-                <RefreshControl
-                  refreshing={isPTR}
-                  onRefresh={onPullToRefresh}
-                  tintColor={pal.colors.text}
-                  titleColor={pal.colors.text}
-                />
-              }
+              refreshing={isPTR}
+              onRefresh={onPullToRefresh}
               onEndReached={onEndReached}
               // @ts-ignore web only -prf
               desktopFixedHeight
@@ -284,7 +286,7 @@ function SearchScreenUserResults({query}: {query: string}) {
   return isFetched && results ? (
     <>
       {results.length ? (
-        <FlatList
+        <List
           data={results}
           renderItem={({item}) => (
             <ProfileCardWithFollowBtn profile={item} noBg />
@@ -303,8 +305,15 @@ function SearchScreenUserResults({query}: {query: string}) {
   )
 }
 
-const SECTIONS = ['Posts', 'Users']
-export function SearchScreenInner({query}: {query?: string}) {
+const SECTIONS_LOGGEDOUT = ['Users']
+const SECTIONS_LOGGEDIN = ['Posts', 'Users']
+export function SearchScreenInner({
+  query,
+  primarySearch,
+}: {
+  query?: string
+  primarySearch?: boolean
+}) {
   const pal = usePalette('default')
   const setMinimalShellMode = useSetMinimalShellMode()
   const setDrawerSwipeDisabled = useSetDrawerSwipeDisabled()
@@ -319,44 +328,62 @@ export function SearchScreenInner({query}: {query?: string}) {
     [setDrawerSwipeDisabled, setMinimalShellMode],
   )
 
+  if (hasSession) {
+    return query ? (
+      <Pager
+        tabBarPosition="top"
+        onPageSelected={onPageSelected}
+        renderTabBar={props => (
+          <CenteredView sideBorders style={pal.border}>
+            <TabBar items={SECTIONS_LOGGEDIN} {...props} />
+          </CenteredView>
+        )}
+        initialPage={0}>
+        <View>
+          <SearchScreenPostResults query={query} />
+        </View>
+        <View>
+          <SearchScreenUserResults query={query} />
+        </View>
+      </Pager>
+    ) : (
+      <View>
+        <CenteredView sideBorders style={pal.border}>
+          <Text
+            type="title"
+            style={[
+              pal.text,
+              pal.border,
+              {
+                display: 'flex',
+                paddingVertical: 12,
+                paddingHorizontal: 18,
+                fontWeight: 'bold',
+              },
+            ]}>
+            <Trans>Suggested Follows</Trans>
+          </Text>
+        </CenteredView>
+
+        <SearchScreenSuggestedFollows />
+      </View>
+    )
+  }
+
   return query ? (
     <Pager
       tabBarPosition="top"
       onPageSelected={onPageSelected}
       renderTabBar={props => (
         <CenteredView sideBorders style={pal.border}>
-          <TabBar items={SECTIONS} {...props} />
+          <TabBar items={SECTIONS_LOGGEDOUT} {...props} />
         </CenteredView>
       )}
       initialPage={0}>
       <View>
-        <SearchScreenPostResults query={query} />
-      </View>
-      <View>
         <SearchScreenUserResults query={query} />
       </View>
     </Pager>
-  ) : hasSession ? (
-    <View>
-      <CenteredView sideBorders style={pal.border}>
-        <Text
-          type="title"
-          style={[
-            pal.text,
-            pal.border,
-            {
-              display: 'flex',
-              paddingVertical: 12,
-              paddingHorizontal: 18,
-              fontWeight: 'bold',
-            },
-          ]}>
-          <Trans>Suggested Follows</Trans>
-        </Text>
-      </CenteredView>
-
-      <SearchScreenSuggestedFollows />
-    </View>
   ) : (
     <CenteredView sideBorders style={pal.border}>
       <View
@@ -382,31 +409,33 @@ export function SearchScreenInner({query}: {query?: string}) {
           </Text>
         )}
 
-        <Text
-          style={[
-            pal.textLight,
-            {textAlign: 'center', paddingVertical: 12, paddingHorizontal: 18},
-          ]}>
-          <Trans>Search for posts and users.</Trans>
-        </Text>
+        <View
+          style={{
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingVertical: 30,
+            gap: 15,
+          }}>
+          <MagnifyingGlassIcon
+            strokeWidth={3}
+            size={isDesktop ? 60 : 60}
+            style={pal.textLight}
+          />
+          <Text type="xl" style={[pal.textLight, {paddingHorizontal: 18}]}>
+            {isDesktop && !primarySearch ? (
+              <Trans>Find users with the search tool on the right</Trans>
+            ) : (
+              <Trans>Find users on Bluesky</Trans>
+            )}
+          </Text>
+        </View>
       </View>
     </CenteredView>
   )
 }
 
-export function SearchScreenDesktop(
-  props: NativeStackScreenProps<SearchTabNavigatorParams, 'Search'>,
-) {
-  const {isDesktop} = useWebMediaQueries()
-
-  return isDesktop ? (
-    <SearchScreenInner query={props.route.params?.q} />
-  ) : (
-    <SearchScreenMobile {...props} />
-  )
-}
-
-export function SearchScreenMobile(
+export function SearchScreen(
   props: NativeStackScreenProps<SearchTabNavigatorParams, 'Search'>,
 ) {
   const theme = useTheme()
@@ -418,7 +447,7 @@ export function SearchScreenMobile(
   const moderationOpts = useModerationOpts()
   const search = useActorAutocompleteFn()
   const setMinimalShellMode = useSetMinimalShellMode()
-  const {isTablet} = useWebMediaQueries()
+  const {isTabletOrDesktop, isTabletOrMobile} = useWebMediaQueries()
 
   const searchDebounceTimeout = React.useRef<NodeJS.Timeout | undefined>(
     undefined,
@@ -484,6 +513,11 @@ export function SearchScreenMobile(
     onPressCancelSearch()
   }, [onPressCancelSearch])
 
+  const queryMaybeHandle = React.useMemo(() => {
+    const match = MATCH_HANDLE.exec(query)
+    return match && match[1]
+  }, [query])
+
   useFocusEffect(
     React.useCallback(() => {
       setMinimalShellMode(false)
@@ -493,17 +527,29 @@ export function SearchScreenMobile(
 
   return (
     <View style={{flex: 1}}>
-      <CenteredView style={[styles.header, pal.border]} sideBorders={isTablet}>
-        <Pressable
-          testID="viewHeaderBackOrMenuBtn"
-          onPress={onPressMenu}
-          hitSlop={HITSLOP_10}
-          style={styles.headerMenuBtn}
-          accessibilityRole="button"
-          accessibilityLabel={_(msg`Menu`)}
-          accessibilityHint="Access navigation links and settings">
-          <FontAwesomeIcon icon="bars" size={18} color={pal.colors.textLight} />
-        </Pressable>
+      <CenteredView
+        style={[
+          styles.header,
+          pal.border,
+          isTabletOrDesktop && {paddingTop: 10},
+        ]}
+        sideBorders={isTabletOrDesktop}>
+        {isTabletOrMobile && (
+          <Pressable
+            testID="viewHeaderBackOrMenuBtn"
+            onPress={onPressMenu}
+            hitSlop={HITSLOP_10}
+            style={styles.headerMenuBtn}
+            accessibilityRole="button"
+            accessibilityLabel={_(msg`Menu`)}
+            accessibilityHint={_(msg`Access navigation links and settings`)}>
+            <FontAwesomeIcon
+              icon="bars"
+              size={18}
+              color={pal.colors.textLight}
+            />
+          </Pressable>
+        )}
 
         <View
           style={[
@@ -517,7 +563,7 @@ export function SearchScreenMobile(
           <TextInput
             testID="searchTextInput"
             ref={textInput}
-            placeholder="Search"
+            placeholder={_(msg`Search`)}
             placeholderTextColor={pal.colors.textLight}
             selectTextOnFocus
             returnKeyType="search"
@@ -533,6 +579,7 @@ export function SearchScreenMobile(
             accessibilityLabel={_(msg`Search`)}
             accessibilityHint=""
             autoCorrect={false}
+            autoComplete="off"
             autoCapitalize="none"
           />
           {query ? (
@@ -541,7 +588,8 @@ export function SearchScreenMobile(
               onPress={onPressClearQuery}
               accessibilityRole="button"
               accessibilityLabel={_(msg`Clear search query`)}
-              accessibilityHint="">
+              accessibilityHint=""
+              hitSlop={HITSLOP_10}>
               <FontAwesomeIcon
                 icon="xmark"
                 size={16}
@@ -553,7 +601,10 @@ export function SearchScreenMobile(
 
         {query || inputIsFocused ? (
           <View style={styles.headerCancelBtn}>
-            <Pressable onPress={onPressCancelSearch} accessibilityRole="button">
+            <Pressable
+              onPress={onPressCancelSearch}
+              accessibilityRole="button"
+              hitSlop={HITSLOP_10}>
               <Text style={[pal.text]}>
                 <Trans>Cancel</Trans>
               </Text>
@@ -567,19 +618,37 @@ export function SearchScreenMobile(
           {isFetching ? (
             <Loader />
           ) : (
-            <ScrollView style={{height: '100%'}}>
-              {searchResults.length ? (
-                searchResults.map((item, i) => (
-                  <SearchResultCard
-                    key={item.did}
-                    profile={item}
-                    moderation={moderateProfile(item, moderationOpts)}
-                    style={i === 0 ? {borderTopWidth: 0} : {}}
-                  />
-                ))
-              ) : (
-                <EmptyState message={_(msg`No results found for ${query}`)} />
-              )}
+            <ScrollView
+              style={{height: '100%'}}
+              // @ts-ignore web only -prf
+              dataSet={{stableGutters: '1'}}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag">
+              <SearchLinkCard
+                label={_(msg`Search for "${query}"`)}
+                onPress={isNative ? onSubmit : undefined}
+                to={
+                  isNative
+                    ? undefined
+                    : `/search?q=${encodeURIComponent(query)}`
+                }
+                style={{borderBottomWidth: 1}}
+              />
+
+              {queryMaybeHandle ? (
+                <SearchLinkCard
+                  label={_(msg`Go to @${queryMaybeHandle}`)}
+                  to={`/profile/${queryMaybeHandle}`}
+                />
+              ) : null}
+
+              {searchResults.map(item => (
+                <SearchProfileCard
+                  key={item.did}
+                  profile={item}
+                  moderation={moderateProfile(item, moderationOpts)}
+                />
+              ))}
 
               <View style={{height: 200}} />
             </ScrollView>

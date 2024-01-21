@@ -38,14 +38,14 @@ export function Component(props: ReportComponentProps) {
         ? 'com.atproto.repo.strongRef'
         : 'com.atproto.admin.defs#repoRef'
       await getAgent().createModerationReport({
-        reasonType: ComAtprotoModerationDefs.REASONOTHER,
+        reasonType: ComAtprotoModerationDefs.REASONAPPEAL,
         subject: {
           $type,
           ...props,
         },
         reason: details,
       })
-      Toast.show("We'll look into your appeal promptly.")
+      Toast.show(_(msg`We'll look into your appeal promptly.`))
     } finally {
       closeModal()
     }
@@ -62,17 +62,17 @@ export function Component(props: ReportComponentProps) {
       <Text
         type="2xl-bold"
         style={[pal.text, s.textCenter, {paddingBottom: 8}]}>
-        <Trans>Appeal Decision</Trans>
+        <Trans>Appeal Content Warning</Trans>
       </Text>
       <ScrollView>
         <View style={[pal.btn, styles.detailsInputContainer]}>
           <TextInput
             accessibilityLabel={_(msg`Text input field`)}
             accessibilityHint={_(
-              msg`Please tell us why you think this decision was incorrect.`,
+              msg`Please tell us why you think this content warning was incorrectly applied!`,
             )}
             placeholder={_(
-              msg`Please tell us why you think this decision was incorrect.`,
+              msg`Please tell us why you think this content warning was incorrectly applied!`,
             )}
             placeholderTextColor={pal.textLight.color}
             value={details}

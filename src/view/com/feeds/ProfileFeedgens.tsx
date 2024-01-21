@@ -1,30 +1,22 @@
-import React, {MutableRefObject} from 'react'
-import {
-  Dimensions,
-  RefreshControl,
-  StyleProp,
-  StyleSheet,
-  View,
-  ViewStyle,
-} from 'react-native'
+import React from 'react'
+import {Dimensions, StyleProp, StyleSheet, View, ViewStyle} from 'react-native'
 import {useQueryClient} from '@tanstack/react-query'
-import {FlatList} from '../util/Views'
+import {List, ListRef} from '../util/List'
 import {FeedSourceCardLoaded} from './FeedSourceCard'
 import {ErrorMessage} from '../util/error/ErrorMessage'
 import {LoadMoreRetryBtn} from '../util/LoadMoreRetryBtn'
 import {Text} from '../util/text/Text'
 import {usePalette} from 'lib/hooks/usePalette'
 import {useProfileFeedgensQuery, RQKEY} from '#/state/queries/profile-feedgens'
-import {OnScrollHandler} from '#/lib/hooks/useOnMainScroll'
 import {logger} from '#/logger'
-import {Trans} from '@lingui/macro'
+import {Trans, msg} from '@lingui/macro'
 import {cleanError} from '#/lib/strings/errors'
-import {useAnimatedScrollHandler} from '#/lib/hooks/useAnimatedScrollHandler_FIXED'
 import {useTheme} from '#/lib/ThemeContext'
 import {usePreferencesQuery} from '#/state/queries/preferences'
 import {hydrateFeedGenerator} from '#/state/queries/feed'
 import {FeedLoadingPlaceholder} from '#/view/com/util/LoadingPlaceholder'
 import {isNative} from '#/platform/detection'
+import {useLingui} from '@lingui/react'
 
 const LOADING = {_reactKey: '__loading__'}
 const EMPTY = {_reactKey: '__empty__'}
@@ -37,9 +29,7 @@ interface SectionRef {
 
 interface ProfileFeedgensProps {
   did: string
-  scrollElRef: MutableRefObject<FlatList<any> | null>
-  onScroll?: OnScrollHandler
-  scrollEventThrottle?: number
+  scrollElRef: ListRef
   headerOffset: number
   enabled?: boolean
   style?: StyleProp<ViewStyle>
@@ -50,19 +40,11 @@ export const ProfileFeedgens = React.forwardRef<
   SectionRef,
   ProfileFeedgensProps
 >(function ProfileFeedgensImpl(
-  {
-    did,
-    scrollElRef,
-    onScroll,
-    scrollEventThrottle,
-    headerOffset,
-    enabled,
-    style,
-    testID,
-  },
+  {did, scrollElRef, headerOffset, enabled, style, testID},
   ref,
 ) {
   const pal = usePalette('default')
+  const {_} = useLingui()
   const theme = useTheme()
   const [isPTRing, setIsPTRing] = React.useState(false)
   const opts = React.useMemo(() => ({enabled}), [enabled])
@@ -162,7 +144,9 @@ export const ProfileFeedgens = React.forwardRef<
       } else if (item === LOAD_MORE_ERROR_ITEM) {
         return (
           <LoadMoreRetryBtn
-            label="There was an issue fetching your lists. Tap here to try again."
+            label={_(
+              msg`There was an issue fetching your lists. Tap here to try again.`,
+            )}
             onPress={onPressRetryLoadMore}
           />
         )
@@ -182,36 +166,25 @@ export const ProfileFeedgens = React.forwardRef<
       }
       return null
     },
-    [error, refetch, onPressRetryLoadMore, pal, preferences],
+    [error, refetch, onPressRetryLoadMore, pal, preferences, _],
   )
 
-  const scrollHandler = useAnimatedScrollHandler(onScroll || {})
   return (
     <View testID={testID} style={style}>
-      <FlatList
+      <List
         testID={testID ? `${testID}-flatlist` : undefined}
         ref={scrollElRef}
         data={items}
         keyExtractor={(item: any) => item._reactKey || item.uri}
         renderItem={renderItemInner}
-        refreshControl={
-          <RefreshControl
-            refreshing={isPTRing}
-            onRefresh={onRefresh}
-            tintColor={pal.colors.text}
-            titleColor={pal.colors.text}
-            progressViewOffset={headerOffset}
-          />
-        }
+        refreshing={isPTRing}
+        onRefresh={onRefresh}
+        headerOffset={headerOffset}
         contentContainerStyle={{
           minHeight: Dimensions.get('window').height * 1.5,
         }}
-        style={{paddingTop: headerOffset}}
-        onScroll={onScroll != null ? scrollHandler : undefined}
-        scrollEventThrottle={scrollEventThrottle}
         indicatorStyle={theme.colorScheme === 'dark' ? 'white' : 'black'}
         removeClippedSubviews={true}
-        contentOffset={{x: 0, y: headerOffset * -1}}
         // @ts-ignore our .web version only -prf
         desktopFixedHeight
         onEndReached={onEndReached}

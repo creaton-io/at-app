@@ -1,17 +1,16 @@
 import React, {useMemo, useCallback, useState} from 'react'
-import {ActivityIndicator, RefreshControl, StyleSheet, View} from 'react-native'
+import {ActivityIndicator, StyleSheet, View} from 'react-native'
 import {AppBskyActorDefs as ActorDefs} from '@atproto/api'
-import {CenteredView, FlatList} from '../util/Views'
+import {CenteredView} from '../util/Views'
+import {List} from '../util/List'
 import {ProfileCardWithFollowBtn} from '../profile/ProfileCard'
 import {ErrorMessage} from '../util/error/ErrorMessage'
-import {usePalette} from 'lib/hooks/usePalette'
 import {logger} from '#/logger'
 import {useResolveUriQuery} from '#/state/queries/resolve-uri'
 import {usePostRepostedByQuery} from '#/state/queries/post-reposted-by'
 import {cleanError} from '#/lib/strings/errors'
 
 export function PostRepostedBy({uri}: {uri: string}) {
-  const pal = usePalette('default')
   const [isPTRing, setIsPTRing] = useState(false)
   const {
     data: resolvedUri,
@@ -85,17 +84,11 @@ export function PostRepostedBy({uri}: {uri: string}) {
   // loaded
   // =
   return (
-    <FlatList
+    <List
       data={repostedBy}
       keyExtractor={item => item.did}
-      refreshControl={
-        <RefreshControl
-          refreshing={isPTRing}
-          onRefresh={onRefresh}
-          tintColor={pal.colors.text}
-          titleColor={pal.colors.text}
-        />
-      }
+      refreshing={isPTRing}
+      onRefresh={onRefresh}
       onEndReached={onEndReached}
       renderItem={renderItem}
       initialNumToRender={15}

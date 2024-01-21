@@ -51,6 +51,9 @@ import {useUnreadNotifications} from '#/state/queries/notifications/unread'
 import {emitSoftReset} from '#/state/events'
 import {useInviteCodesQuery} from '#/state/queries/invites'
 import {NavSignupCard} from '#/view/shell/NavSignupCard'
+import {TextLink} from '../com/util/Link'
+
+import {useTheme as useAlfTheme} from '#/alf'
 
 let DrawerProfileCard = ({
   account,
@@ -67,7 +70,7 @@ let DrawerProfileCard = ({
     <TouchableOpacity
       testID="profileCardButton"
       accessibilityLabel={_(msg`Profile`)}
-      accessibilityHint="Navigates to your profile"
+      accessibilityHint={_(msg`Navigates to your profile`)}
       onPress={onPressProfile}>
       <UserAvatar
         size={80}
@@ -105,7 +108,9 @@ export {DrawerProfileCard}
 
 let DrawerContent = ({}: {}): React.ReactNode => {
   const theme = useTheme()
+  const t = useAlfTheme()
   const pal = usePalette('default')
+  const {_} = useLingui()
   const setDrawerOpen = useSetDrawerOpen()
   const navigation = useNavigation<NavigationProp>()
   const {track} = useAnalytics()
@@ -206,7 +211,7 @@ let DrawerContent = ({}: {}): React.ReactNode => {
       testID="drawer"
       style={[
         styles.view,
-        theme.colorScheme === 'light' ? pal.view : styles.viewDarkMode,
+        theme.colorScheme === 'light' ? pal.view : t.atoms.bg_contrast_25,
       ]}>
       <SafeAreaView style={s.flex1}>
         <ScrollView style={styles.main}>
@@ -221,19 +226,17 @@ let DrawerContent = ({}: {}): React.ReactNode => {
             <NavSignupCard />
           )}
 
-          {hasSession && <InviteCodes />}
-          {hasSession && <View style={{height: 10}} />}
-          <SearchMenuItem isActive={isAtSearch} onPress={onPressSearch} />
-          <HomeMenuItem isActive={isAtHome} onPress={onPressHome} />
-          {hasSession && (
-            <NotificationsMenuItem
-              isActive={isAtNotifications}
-              onPress={onPressNotifications}
-            />
-          )}
-          <FeedsMenuItem isActive={isAtFeeds} onPress={onPressMyFeeds} />
-          {hasSession && (
+          {hasSession ? (
             <>
+              <InviteCodes />
+              <View style={{height: 10}} />
+              <SearchMenuItem isActive={isAtSearch} onPress={onPressSearch} />
+              <HomeMenuItem isActive={isAtHome} onPress={onPressHome} />
+              <NotificationsMenuItem
+                isActive={isAtNotifications}
+                onPress={onPressNotifications}
+              />
+              <FeedsMenuItem isActive={isAtFeeds} onPress={onPressMyFeeds} />
               <ListsMenuItem onPress={onPressLists} />
               <ModerationMenuItem onPress={onPressModeration} />
               <ProfileMenuItem
@@ -242,7 +245,26 @@ let DrawerContent = ({}: {}): React.ReactNode => {
               />
               <SettingsMenuItem onPress={onPressSettings} />
             </>
+          ) : (
+            <SearchMenuItem isActive={isAtSearch} onPress={onPressSearch} />
           )}
+
+          <View style={styles.smallSpacer} />
+
+          <View style={[{flexWrap: 'wrap', gap: 12}, s.flexCol]}>
+            <TextLink
+              type="md"
+              style={pal.link}
+              href="https://blueskyweb.xyz/support/tos"
+              text={_(msg`Terms of Service`)}
+            />
+            <TextLink
+              type="md"
+              style={pal.link}
+              href="https://blueskyweb.xyz/support/privacy-policy"
+              text={_(msg`Privacy Policy`)}
+            />
+          </View>
 
           <View style={styles.smallSpacer} />
           <View style={styles.smallSpacer} />
@@ -416,7 +438,9 @@ let NotificationsMenuItem = ({
       label={_(msg`Notifications`)}
       accessibilityLabel={_(msg`Notifications`)}
       accessibilityHint={
-        numUnreadNotifications === '' ? '' : `${numUnreadNotifications} unread`
+        numUnreadNotifications === ''
+          ? ''
+          : _(msg`${numUnreadNotifications} unread`)
       }
       count={numUnreadNotifications}
       bold={isActive}

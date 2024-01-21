@@ -1,20 +1,20 @@
-import React, {MutableRefObject} from 'react'
-import {CenteredView, FlatList} from '../util/Views'
-import {ActivityIndicator, RefreshControl, StyleSheet, View} from 'react-native'
+import React from 'react'
+import {CenteredView} from '../util/Views'
+import {ActivityIndicator, StyleSheet, View} from 'react-native'
 import {FeedItem} from './FeedItem'
 import {NotificationFeedLoadingPlaceholder} from '../util/LoadingPlaceholder'
 import {ErrorMessage} from '../util/error/ErrorMessage'
 import {LoadMoreRetryBtn} from '../util/LoadMoreRetryBtn'
 import {EmptyState} from '../util/EmptyState'
-import {OnScrollHandler} from 'lib/hooks/useOnMainScroll'
-import {useAnimatedScrollHandler} from '#/lib/hooks/useAnimatedScrollHandler_FIXED'
 import {s} from 'lib/styles'
-import {usePalette} from 'lib/hooks/usePalette'
 import {useNotificationFeedQuery} from '#/state/queries/notifications/feed'
 import {useUnreadNotificationsApi} from '#/state/queries/notifications/unread'
 import {logger} from '#/logger'
 import {cleanError} from '#/lib/strings/errors'
 import {useModerationOpts} from '#/state/queries/preferences'
+import {List, ListRef} from '../util/List'
+import {useLingui} from '@lingui/react'
+import {msg} from '@lingui/macro'
 
 const EMPTY_FEED_ITEM = {_reactKey: '__empty__'}
 const LOAD_MORE_ERROR_ITEM = {_reactKey: '__load_more_error__'}
@@ -23,17 +23,17 @@ const LOADING_ITEM = {_reactKey: '__loading__'}
 export function Feed({
   scrollElRef,
   onPressTryAgain,
-  onScroll,
+  onScrolledDownChange,
   ListHeaderComponent,
 }: {
-  scrollElRef?: MutableRefObject<FlatList<any> | null>
+  scrollElRef?: ListRef
   onPressTryAgain?: () => void
-  onScroll?: OnScrollHandler
+  onScrolledDownChange: (isScrolledDown: boolean) => void
   ListHeaderComponent?: () => JSX.Element
 }) {
-  const pal = usePalette('default')
   const [isPTRing, setIsPTRing] = React.useState(false)
 
+  const {_} = useLingui()
   const moderationOpts = useModerationOpts()
   const {checkUnread} = useUnreadNotificationsApi()
   const {
@@ -104,14 +104,16 @@ export function Feed({
         return (
           <EmptyState
             icon="bell"
-            message="No notifications yet!"
+            message={_(msg`No notifications yet!`)}
             style={styles.emptyState}
           />
         )
       } else if (item === LOAD_MORE_ERROR_ITEM) {
         return (
           <LoadMoreRetryBtn
-            label="There was an issue fetching notifications. Tap here to try again."
+            label={_(
+              msg`There was an issue fetching notifications. Tap here to try again.`,
+            )}
             onPress={onPressRetryLoadMore}
           />
         )
@@ -120,7 +122,7 @@ export function Feed({
       }
       return <FeedItem item={item} moderationOpts={moderationOpts!} />
     },
-    [onPressRetryLoadMore, moderationOpts],
+    [onPressRetryLoadMore, moderationOpts, _],
   )
 
   const FeedFooter = React.useCallback(
@@ -135,7 +137,6 @@ export function Feed({
     [isFetchingNextPage],
   )
 
-  const scrollHandler = useAnimatedScrollHandler(onScroll || {})
   return (
     <View style={s.hContentRegion}>
       {error && (
@@ -146,7 +147,7 @@ export function Feed({
           />
         </CenteredView>
       )}
-      <FlatList
+      <List
         testID="notifsFeed"
         ref={scrollElRef}
         data={items}
@@ -154,18 +155,11 @@ export function Feed({
         renderItem={renderItem}
         ListHeaderComponent={ListHeaderComponent}
         ListFooterComponent={FeedFooter}
-        refreshControl={
-          <RefreshControl
-            refreshing={isPTRing}
-            onRefresh={onRefresh}
-            tintColor={pal.colors.text}
-            titleColor={pal.colors.text}
-          />
-        }
+        refreshing={isPTRing}
+        onRefresh={onRefresh}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.6}
-        onScroll={scrollHandler}
-        scrollEventThrottle={1}
+        onScrolledDownChange={onScrolledDownChange}
         contentContainerStyle={s.contentContainer}
         // @ts-ignore our .web version only -prf
         desktopFixedHeight

@@ -17,7 +17,7 @@ import {useSession} from '#/state/session'
 import {useInviteCodesQuery} from '#/state/queries/invites'
 import {HR} from '@expo/html-elements'
 
-export function DesktopRightNav() {
+export function DesktopRightNav({routeName}: {routeName: string}) {
   const pal = usePalette('default')
   const palError = usePalette('error')
   const {_} = useLingui()
@@ -34,12 +34,22 @@ export function DesktopRightNav() {
         <w3m-button />
         <HR />
 
-        <DesktopSearch />
-
-        {hasSession && (
-          <View style={{paddingTop: 18, marginBottom: 18}}>
+        {/* {hasSession && (
+          <View style={{paddingTop: 18, marginBottom: 18}}> */}
+        {routeName === 'Search' ? (
+          <View style={{marginBottom: 18}}>
             <DesktopFeeds />
           </View>
+        ) : (
+          <>
+            <DesktopSearch />
+
+            {hasSession && (
+              <View style={[pal.border, styles.desktopFeedsContainer]}>
+                <DesktopFeeds />
+              </View>
+            )}
+          </>
         )}
 
         <View
@@ -52,11 +62,11 @@ export function DesktopRightNav() {
           {isSandbox ? (
             <View style={[palError.view, styles.messageLine, s.p10]}>
               <Text type="md" style={[palError.text, s.bold]}>
-                SANDBOX. Posts and accounts are not permanent.
+                <Trans>SANDBOX. Posts and accounts are not permanent.</Trans>
               </Text>
             </View>
           ) : undefined}
-          <View style={[s.flexRow]}>
+          <View style={[{flexWrap: 'wrap'}, s.flexRow]}>
             {hasSession && (
               <>
                 <TextLink
@@ -176,14 +186,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     // @ts-ignore web only
     left: 'calc(50vw + 320px)',
-    width: 304,
+    width: 300,
     maxHeight: '100%',
     overflowY: 'auto',
   },
 
   message: {
     paddingVertical: 18,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
   },
   messageLine: {
     marginBottom: 10,
@@ -191,7 +201,7 @@ const styles = StyleSheet.create({
 
   inviteCodes: {
     borderTopWidth: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 12,
     flexDirection: 'row',
   },
@@ -199,5 +209,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginRight: 6,
     flexShrink: 0,
+  },
+  desktopFeedsContainer: {
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    marginTop: 18,
+    marginBottom: 18,
   },
 })

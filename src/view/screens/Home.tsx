@@ -9,17 +9,22 @@ import {CustomFeedEmptyState} from 'view/com/posts/CustomFeedEmptyState'
 import {FeedsTabBar} from '../com/pager/FeedsTabBar'
 import {Pager, RenderTabBarFnProps} from 'view/com/pager/Pager'
 import {FeedPage} from 'view/com/feeds/FeedPage'
+import {HomeLoggedOutCTA} from '../com/auth/HomeLoggedOutCTA'
 import {useSetMinimalShellMode, useSetDrawerSwipeDisabled} from '#/state/shell'
 import {usePreferencesQuery} from '#/state/queries/preferences'
+import {usePinnedFeedsInfos, FeedSourceInfo} from '#/state/queries/feed'
 import {UsePreferencesQueryResponse} from '#/state/queries/preferences/types'
 import {emitSoftReset} from '#/state/events'
 import {useSession} from '#/state/session'
 import {loadString, saveString} from '#/lib/storage'
 import {useWebMediaQueries} from '#/lib/hooks/useWebMediaQueries'
+import {clamp} from '#/lib/numbers'
 
 type Props = NativeStackScreenProps<HomeTabNavigatorParams, 'Home'>
 export function HomeScreen(props: Props) {
   const {data: preferences} = usePreferencesQuery()
+  const {feeds: pinnedFeeds, isLoading: isPinnedFeedsLoading} =
+    usePinnedFeedsInfos()
   const {isDesktop} = useWebMediaQueries()
   const [initialPage, setInitialPage] = React.useState<string | undefined>(
     undefined,
@@ -38,11 +43,17 @@ export function HomeScreen(props: Props) {
     loadLastActivePage()
   }, [])
 
-  if (preferences && initialPage !== undefined) {
+  if (
+    preferences &&
+    pinnedFeeds &&
+    initialPage !== undefined &&
+    !isPinnedFeedsLoading
+  ) {
     return (
       <HomeScreenReady
         {...props}
         preferences={preferences}
+        pinnedFeeds={pinnedFeeds}
         initialPage={isDesktop ? 'Following' : initialPage}
       />
     )
@@ -57,9 +68,11 @@ export function HomeScreen(props: Props) {
 
 function HomeScreenReady({
   preferences,
+  pinnedFeeds,
   initialPage,
 }: Props & {
   preferences: UsePreferencesQueryResponse
+  pinnedFeeds: FeedSourceInfo[]
   initialPage: string
 }) {
   const {hasSession} = useSession()
@@ -81,9 +94,9 @@ function HomeScreenReady({
   }, [preferences.feeds.pinned, selectedPage])
 
   const customFeeds = React.useMemo(() => {
-    const pinned = preferences.feeds.pinned
+    const pinned = pinnedFeeds
     const feeds: FeedDescriptor[] = []
-    for (const uri of pinned) {
+    for (const {uri} of pinned) {
       if (uri.includes('app.bsky.feed.generator')) {
         feeds.push(`feedgen|${uri}`)
       } else if (uri.includes('app.bsky.graph.list')) {
@@ -91,12 +104,14 @@ function HomeScreenReady({
       }
     }
     return feeds
-  }, [preferences.feeds.pinned])
+  }, [pinnedFeeds])
 
   const homeFeedParams = React.useMemo<FeedParams>(() => {
     return {
       mergeFeedEnabled: Boolean(preferences.feedViewPrefs.lab_mergeFeedEnabled),
-      mergeFeedSources: preferences.feeds.saved,
+      mergeFeedSources: preferences.feedViewPrefs.lab_mergeFeedEnabled
+        ? preferences.feeds.saved
+        : [],
     }
   }, [preferences])
 
@@ -166,7 +181,7 @@ function HomeScreenReady({
     <Pager
       key={pinnedFeedOrderKey}
       testID="homeScreen"
-      initialPage={selectedPageIndex}
+      initialPage={clamp(selectedPageIndex, 0, customFeeds.length)}
       onPageSelected={onPageSelected}
       onPageScrollStateChanged={onPageScrollStateChanged}
       renderTabBar={renderTabBar}
@@ -199,12 +214,7 @@ function HomeScreenReady({
       onPageScrollStateChanged={onPageScrollStateChanged}
       renderTabBar={renderTabBar}
       tabBarPosition="top">
-      <FeedPage
-        testID="customFeedPage"
-        isPageFocused={true}
-        feed={`feedgen|at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot`}
-        renderEmptyState={renderCustomFeedEmptyState}
-      />
+      <HomeLoggedOutCTA />
     </Pager>
   )
 }

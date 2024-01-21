@@ -1,5 +1,5 @@
 import React from 'react'
-import {AppBskyEmbedRecord} from '@atproto/api'
+import {AppBskyEmbedRecord, AppBskyRichtextFacet} from '@atproto/api'
 import {useNonReactiveCallback} from '#/lib/hooks/useNonReactiveCallback'
 
 export interface ComposerOptsPostRef {
@@ -11,11 +11,13 @@ export interface ComposerOptsPostRef {
     displayName?: string
     avatar?: string
   }
+  embed?: AppBskyEmbedRecord.ViewRecord['embed']
 }
 export interface ComposerOptsQuote {
   uri: string
   cid: string
   text: string
+  facets?: AppBskyRichtextFacet.Main[]
   indexedAt: string
   author: {
     did: string
@@ -30,6 +32,7 @@ export interface ComposerOpts {
   onPost?: () => void
   quote?: ComposerOptsQuote
   mention?: string // handle of user to mention
+  openPicker?: (pos: DOMRect | undefined) => void
 }
 
 type StateContext = ComposerOpts | undefined

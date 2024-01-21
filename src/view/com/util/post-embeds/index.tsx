@@ -22,10 +22,7 @@ import {Link} from '../Link'
 import {ImageLayoutGrid} from '../images/ImageLayoutGrid'
 import {useLightboxControls, ImagesLightbox} from '#/state/lightbox'
 import {usePalette} from 'lib/hooks/usePalette'
-import {useWebMediaQueries} from 'lib/hooks/useWebMediaQueries'
-import {YoutubeEmbed} from './YoutubeEmbed'
 import {ExternalLinkEmbed} from './ExternalLinkEmbed'
-import {getYoutubeVideoId} from 'lib/strings/url-helpers'
 import {MaybeQuoteEmbed} from './QuoteEmbed'
 import {AutoSizedImage} from '../images/AutoSizedImage'
 import {ListEmbed} from './ListEmbed'
@@ -53,7 +50,6 @@ export function PostEmbeds({
 }) {
   const pal = usePalette('default')
   const {openLightbox} = useLightboxControls()
-  const {isMobile} = useWebMediaQueries()
 
   // quote post with media
   // =
@@ -65,7 +61,7 @@ export function PostEmbeds({
     const mediaModeration = isModOnQuote ? {} : moderation
     const quoteModeration = isModOnQuote ? moderation : {}
     return (
-      <View style={[styles.stackContainer, style]}>
+      <View style={style}>
         <PostEmbeds embed={embed.media} moderation={mediaModeration} />
         <ContentHider moderation={quoteModeration}>
           <MaybeQuoteEmbed embed={embed.record} moderation={quoteModeration} />
@@ -131,10 +127,7 @@ export function PostEmbeds({
               dimensionsHint={aspectRatio}
               onPress={() => _openLightbox(0)}
               onPressIn={() => onPressIn(0)}
-              style={[
-                styles.singleImage,
-                isMobile && styles.singleImageMobile,
-              ]}>
+              style={[styles.singleImage]}>
               {alt === '' ? null : (
                 <View style={styles.altContainer}>
                   <Text style={styles.alt} accessible={false}>
@@ -153,11 +146,7 @@ export function PostEmbeds({
             images={embed.images}
             onPress={_openLightbox}
             onPressIn={onPressIn}
-            style={
-              embed.images.length === 1
-                ? [styles.singleImage, isMobile && styles.singleImageMobile]
-                : undefined
-            }
+            style={embed.images.length === 1 ? [styles.singleImage] : undefined}
           />
         </View>
       )
@@ -168,17 +157,14 @@ export function PostEmbeds({
   // =
   if (AppBskyEmbedExternal.isView(embed)) {
     const link = embed.external
-    const youtubeVideoId = getYoutubeVideoId(link.uri)
-
-    if (youtubeVideoId) {
-      return <YoutubeEmbed link={link} style={style} />
-    }
 
     return (
       <Link
         asAnchor
-        style={[styles.extOuter, pal.view, pal.border, style]}
-        href={link.uri}>
+        anchorNoUnderline
+        href={link.uri}
+        style={[styles.extOuter, pal.view, pal.borderDark, style]}
+        hoverStyle={{borderColor: pal.colors.borderLinkHover}}>
         <ExternalLinkEmbed link={link} />
       </Link>
     )
@@ -188,18 +174,11 @@ export function PostEmbeds({
 }
 
 const styles = StyleSheet.create({
-  stackContainer: {
-    gap: 6,
-  },
   imagesContainer: {
     marginTop: 8,
   },
   singleImage: {
     borderRadius: 8,
-    maxHeight: 1000,
-  },
-  singleImageMobile: {
-    maxHeight: 500,
   },
   extOuter: {
     borderWidth: 1,

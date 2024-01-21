@@ -7,7 +7,7 @@ import {Text} from '../text/Text'
 import {ShieldExclamation} from 'lib/icons'
 import {describeModerationCause} from 'lib/moderation'
 import {useLingui} from '@lingui/react'
-import {msg} from '@lingui/macro'
+import {msg, Trans} from '@lingui/macro'
 import {useModalControls} from '#/state/modals'
 import {isPostMediaBlurred} from 'lib/moderation'
 
@@ -63,7 +63,9 @@ export function ContentHider({
           }
         }}
         accessibilityRole="button"
-        accessibilityHint={override ? 'Hide the content' : 'Show the content'}
+        accessibilityHint={
+          override ? _(msg`Hide the content`) : _(msg`Show the content`)
+        }
         accessibilityLabel=""
         style={[
           styles.cover,
@@ -92,16 +94,20 @@ export function ContentHider({
             <ShieldExclamation size={18} style={pal.textLight} />
           )}
         </Pressable>
-        <Text type="md" style={pal.text}>
+        <Text type="md" style={[pal.text, {flex: 1}]} numberOfLines={2}>
           {desc.name}
         </Text>
-        {!moderation.noOverride && (
-          <View style={styles.showBtn}>
-            <Text type="lg" style={pal.link}>
-              {override ? 'Hide' : 'Show'}
-            </Text>
-          </View>
-        )}
+        <View style={styles.showBtn}>
+          <Text type="lg" style={pal.link}>
+            {moderation.noOverride ? (
+              <Trans>Learn more</Trans>
+            ) : override ? (
+              <Trans>Hide</Trans>
+            ) : (
+              <Trans>Show</Trans>
+            )}
+          </Text>
+        </View>
       </Pressable>
       {override && <View style={childContainerStyle}>{children}</View>}
     </View>
@@ -125,7 +131,7 @@ const styles = StyleSheet.create({
   cover: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
     borderRadius: 8,
     marginTop: 4,
     paddingVertical: 14,

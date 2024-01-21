@@ -38,6 +38,8 @@ import * as VerifyEmailModal from './VerifyEmail'
 import * as ChangeEmailModal from './ChangeEmail'
 import * as SwitchAccountModal from './SwitchAccount'
 import * as LinkWarningModal from './LinkWarning'
+import * as EmbedConsentModal from './EmbedConsent'
+import * as InAppBrowserConsentModal from './InAppBrowserConsent'
 
 const DEFAULT_SNAPPOINTS = ['90%']
 const HANDLE_HEIGHT = 24
@@ -82,7 +84,7 @@ export function ModalsContainer() {
 
   useEffect(() => {
     if (isModalActive) {
-      bottomSheetRef.current?.expand()
+      bottomSheetRef.current?.snapToIndex(0)
     } else {
       bottomSheetRef.current?.close()
     }
@@ -176,6 +178,12 @@ export function ModalsContainer() {
   } else if (activeModal?.name === 'link-warning') {
     snapPoints = LinkWarningModal.snapPoints
     element = <LinkWarningModal.Component {...activeModal} />
+  } else if (activeModal?.name === 'embed-consent') {
+    snapPoints = EmbedConsentModal.snapPoints
+    element = <EmbedConsentModal.Component {...activeModal} />
+  } else if (activeModal?.name === 'in-app-browser-consent') {
+    snapPoints = InAppBrowserConsentModal.snapPoints
+    element = <InAppBrowserConsentModal.Component {...activeModal} />
   } else {
     return null
   }

@@ -108,6 +108,8 @@ export function transform(legacy: Partial<LegacySchema>): Schema {
     onboarding: {
       step: legacy.onboarding?.step || defaults.onboarding.step,
     },
+    hiddenPosts: defaults.hiddenPosts,
+    externalEmbeds: defaults.externalEmbeds,
   }
 }
 
@@ -162,14 +164,14 @@ export async function migrate() {
 
       if (validate.success) {
         await write(newData)
-        logger.log('persisted state: migrated legacy storage')
+        logger.info('persisted state: migrated legacy storage')
       } else {
         logger.error('persisted state: legacy data failed validation', {
           error: validate.error,
         })
       }
     } else {
-      logger.log('persisted state: no migration needed')
+      logger.info('persisted state: no migration needed')
     }
   } catch (e: any) {
     logger.error(e, {

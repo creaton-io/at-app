@@ -1,5 +1,5 @@
 import React from 'react'
-import {ActivityIndicator, StyleSheet, View, RefreshControl} from 'react-native'
+import {ActivityIndicator, StyleSheet, View} from 'react-native'
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome'
 import {FontAwesomeIconStyle} from '@fortawesome/react-native-fontawesome'
 import {ViewHeader} from 'view/com/util/ViewHeader'
@@ -19,7 +19,7 @@ import {
 import {ErrorMessage} from 'view/com/util/error/ErrorMessage'
 import debounce from 'lodash.debounce'
 import {Text} from 'view/com/util/text/Text'
-import {FlatList} from 'view/com/util/Views'
+import {List} from 'view/com/util/List'
 import {useFocusEffect} from '@react-navigation/native'
 import {FeedSourceCard} from 'view/com/feeds/FeedSourceCard'
 import {Trans, msg} from '@lingui/macro'
@@ -97,6 +97,7 @@ export function FeedsScreen(_props: Props) {
     data: preferences,
     isLoading: isPreferencesLoading,
     error: preferencesError,
+    refetch: refetchPreferences,
   } = usePreferencesQuery()
   const {
     data: popularFeeds,
@@ -151,9 +152,12 @@ export function FeedsScreen(_props: Props) {
   }, [query, debouncedSearch])
   const onPullToRefresh = React.useCallback(async () => {
     setIsPTR(true)
-    await refetchPopularFeeds()
+    await Promise.all([
+      refetchPreferences().catch(_e => undefined),
+      refetchPopularFeeds().catch(_e => undefined),
+    ])
     setIsPTR(false)
-  }, [setIsPTR, refetchPopularFeeds])
+  }, [setIsPTR, refetchPreferences, refetchPopularFeeds])
   const onEndReached = React.useCallback(() => {
     if (
       isPopularFeedsFetching ||
@@ -328,7 +332,7 @@ export function FeedsScreen(_props: Props) {
         hitSlop={10}
         accessibilityRole="button"
         accessibilityLabel={_(msg`Edit Saved Feeds`)}
-        accessibilityHint="Opens screen to edit Saved Feeds">
+        accessibilityHint={_(msg`Opens screen to edit Saved Feeds`)}>
         <CogIcon size={22} strokeWidth={2} style={pal.textLight} />
       </Link>
     )
@@ -481,24 +485,21 @@ export function FeedsScreen(_props: Props) {
 
       {preferences ? <View /> : <ActivityIndicator />}
 
-      <FlatList
+      <List
         style={[!isTabletOrDesktop && s.flex1, styles.list]}
         data={items}
         keyExtractor={item => item.key}
         contentContainerStyle={styles.contentContainer}
         renderItem={renderItem}
-        refreshControl={
-          <RefreshControl
-            refreshing={isPTR}
-            onRefresh={isUserSearching ? undefined : onPullToRefresh}
-            tintColor={pal.colors.text}
-            titleColor={pal.colors.text}
-          />
-        }
+        refreshing={isPTR}
+        onRefresh={isUserSearching ? undefined : onPullToRefresh}
         initialNumToRender={10}
         onEndReached={onEndReached}
         // @ts-ignore our .web version only -prf
         desktopFixedHeight
+        scrollIndicatorInsets={{right: 1}}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       />
 
       {hasSession && (

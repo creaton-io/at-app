@@ -3,12 +3,9 @@ import {StyleSheet, TouchableOpacity, View} from 'react-native'
 import {TabBar} from 'view/com/pager/TabBar'
 import {RenderTabBarFnProps} from 'view/com/pager/Pager'
 import {usePalette} from 'lib/hooks/usePalette'
-import {useColorSchemeStyle} from 'lib/hooks/useColorSchemeStyle'
 import {Link} from '../util/Link'
-import {Text} from '../util/text/Text'
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome'
 import {FontAwesomeIconStyle} from '@fortawesome/react-native-fontawesome'
-import {s} from 'lib/styles'
 import {HITSLOP_10} from 'lib/constants'
 import Animated from 'react-native-reanimated'
 import {msg} from '@lingui/macro'
@@ -21,17 +18,22 @@ import {usePinnedFeedsInfos} from '#/state/queries/feed'
 import {isWeb} from 'platform/detection'
 import {useNavigation} from '@react-navigation/native'
 import {NavigationProp} from 'lib/routes/types'
+import {Logo} from '#/view/icons/Logo'
+
+import {IS_DEV} from '#/env'
+import {atoms} from '#/alf'
+import {Link as Link2} from '#/components/Link'
+import {ColorPalette_Stroke2_Corner0_Rounded as ColorPalette} from '#/components/icons/ColorPalette'
 
 export function FeedsTabBar(
   props: RenderTabBarFnProps & {testID?: string; onPressSelected: () => void},
 ) {
   const pal = usePalette('default')
-  const {isSandbox, hasSession} = useSession()
+  const {hasSession} = useSession()
   const {_} = useLingui()
   const setDrawerOpen = useSetDrawerOpen()
   const navigation = useNavigation<NavigationProp>()
   const {feeds, hasPinnedCustom} = usePinnedFeedsInfos()
-  const brandBlue = useColorSchemeStyle(s.brandBlue, s.blue3)
   const {headerHeight} = useShellLayout()
   const {headerMinimalShellTransform} = useMinimalShellMode()
   const pinnedDisplayNames = hasSession ? feeds.map(f => f.displayName) : []
@@ -71,13 +73,15 @@ export function FeedsTabBar(
         headerHeight.value = e.nativeEvent.layout.height
       }}>
       <View style={[pal.view, styles.topBar]}>
-        <View style={[pal.view]}>
+        <View style={[pal.view, {width: 100}]}>
           <TouchableOpacity
             testID="viewHeaderDrawerBtn"
             onPress={onPressAvi}
             accessibilityRole="button"
             accessibilityLabel={_(msg`Open navigation`)}
-            accessibilityHint="Access profile and other navigation links"
+            accessibilityHint={_(
+              msg`Access profile and other navigation links`,
+            )}
             hitSlop={HITSLOP_10}>
             <FontAwesomeIcon
               icon="bars"
@@ -86,10 +90,24 @@ export function FeedsTabBar(
             />
           </TouchableOpacity>
         </View>
-        <Text style={[brandBlue, s.bold, styles.title]}>
-          {isSandbox ? 'SANDBOX' : 'Bluesky'}
-        </Text>
-        <View style={[pal.view, {width: 18}]}>
+        <View>
+          <Logo width={30} />
+        </View>
+        <View
+          style={[
+            atoms.flex_row,
+            atoms.justify_end,
+            atoms.align_center,
+            atoms.gap_md,
+            pal.view,
+            {width: 100},
+          ]}>
+          {IS_DEV && (
+            <Link2 to="/sys/debug">
+              <ColorPalette size="md" />
+            </Link2>
+          )}
+
           {hasSession && (
             <Link
               testID="viewHeaderHomeFeedPrefsBtn"

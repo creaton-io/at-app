@@ -15,7 +15,7 @@ import {ErrorMessage} from '../util/error/ErrorMessage'
 import {Text} from '../util/text/Text'
 import {useAnalytics} from 'lib/analytics/analytics'
 import {usePalette} from 'lib/hooks/usePalette'
-import {FlatList} from '../util/Views'
+import {List} from '../util/List'
 import {s} from 'lib/styles'
 import {logger} from '#/logger'
 import {Trans} from '@lingui/macro'
@@ -119,31 +119,51 @@ export function MyLists({
     [error, onRefresh, renderItem, pal],
   )
 
-  const FlatListCom = inline ? RNFlatList : FlatList
-  return (
-    <View testID={testID} style={style}>
-      {items.length > 0 && (
-        <FlatListCom
-          testID={testID ? `${testID}-flatlist` : undefined}
-          data={items}
-          keyExtractor={item => (item.uri ? item.uri : item._reactKey)}
-          renderItem={renderItemInner}
-          refreshControl={
-            <RefreshControl
-              refreshing={isPTRing}
-              onRefresh={onRefresh}
-              tintColor={pal.colors.text}
-              titleColor={pal.colors.text}
-            />
-          }
-          contentContainerStyle={[s.contentContainer]}
-          removeClippedSubviews={true}
-          // @ts-ignore our .web version only -prf
-          desktopFixedHeight
-        />
-      )}
-    </View>
-  )
+  if (inline) {
+    return (
+      <View testID={testID} style={style}>
+        {items.length > 0 && (
+          <RNFlatList
+            testID={testID ? `${testID}-flatlist` : undefined}
+            data={items}
+            keyExtractor={item => (item.uri ? item.uri : item._reactKey)}
+            renderItem={renderItemInner}
+            refreshControl={
+              <RefreshControl
+                refreshing={isPTRing}
+                onRefresh={onRefresh}
+                tintColor={pal.colors.text}
+                titleColor={pal.colors.text}
+              />
+            }
+            contentContainerStyle={[s.contentContainer]}
+            removeClippedSubviews={true}
+            // @ts-ignore our .web version only -prf
+            desktopFixedHeight
+          />
+        )}
+      </View>
+    )
+  } else {
+    return (
+      <View testID={testID} style={style}>
+        {items.length > 0 && (
+          <List
+            testID={testID ? `${testID}-flatlist` : undefined}
+            data={items}
+            keyExtractor={item => (item.uri ? item.uri : item._reactKey)}
+            renderItem={renderItemInner}
+            refreshing={isPTRing}
+            onRefresh={onRefresh}
+            contentContainerStyle={[s.contentContainer]}
+            removeClippedSubviews={true}
+            // @ts-ignore our .web version only -prf
+            desktopFixedHeight
+          />
+        )}
+      </View>
+    )
+  }
 }
 
 const styles = StyleSheet.create({

@@ -5,9 +5,9 @@ import {
   AppBskyFeedDefs,
   AppBskyFeedPost,
   RichText as RichTextAPI,
-  moderatePost,
   PostModeration,
 } from '@atproto/api'
+import {moderatePost_wrapped as moderatePost} from '#/lib/moderatePost_wrapped'
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome'
 import {Link, TextLink} from '../util/Link'
 import {RichText} from '../util/text/RichText'
@@ -42,7 +42,6 @@ import {useComposerControls} from '#/state/shell/composer'
 import {useModerationOpts} from '#/state/queries/preferences'
 import {Shadow, usePostShadow, POST_TOMBSTONE} from '#/state/cache/post-shadow'
 import {ThreadPost} from '#/state/queries/post-thread'
-import {LabelInfo} from '../util/moderation/LabelInfo'
 import {useSession} from '#/state/session'
 import {WhoCanReply} from '../threadgate/WhoCanReply'
 
@@ -159,6 +158,7 @@ let PostThreadItemLoaded = ({
   onPostReply: () => void
 }): React.ReactNode => {
   const pal = usePalette('default')
+  const {_} = useLingui()
   const langPrefs = useLanguagePrefs()
   const {openComposer} = useComposerControls()
   const {currentAccount} = useSession()
@@ -173,7 +173,7 @@ let PostThreadItemLoaded = ({
     const urip = new AtUri(post.uri)
     return makeProfileLink(post.author, 'post', urip.rkey)
   }, [post.uri, post.author])
-  const itemTitle = `Post by ${post.author.handle}`
+  const itemTitle = _(msg`Post by ${post.author.handle}`)
   const authorHref = makeProfileLink(post.author)
   const authorTitle = post.author.handle
   const isAuthorMuted = post.author.viewer?.muted
@@ -181,12 +181,15 @@ let PostThreadItemLoaded = ({
     const urip = new AtUri(post.uri)
     return makeProfileLink(post.author, 'post', urip.rkey, 'liked-by')
   }, [post.uri, post.author])
-  const likesTitle = 'Likes on this post'
+  const likesTitle = _(msg`Likes on this post`)
   const repostsHref = React.useMemo(() => {
     const urip = new AtUri(post.uri)
     return makeProfileLink(post.author, 'post', urip.rkey, 'reposted-by')
   }, [post.uri, post.author])
-  const repostsTitle = 'Reposts of this post'
+  const repostsTitle = _(msg`Reposts of this post`)
+  const isModeratedPost =
+    moderation.decisions.post.cause?.type === 'label' &&
+    moderation.decisions.post.cause.label.src !== currentAccount?.did
 
   const translatorUrl = getTranslatorLink(
     record?.text || '',
@@ -212,6 +215,7 @@ let PostThreadItemLoaded = ({
           displayName: post.author.displayName,
           avatar: post.author.avatar,
         },
+        embed: post.embed,
       },
       onPost: onPostReply,
     })
@@ -222,7 +226,7 @@ let PostThreadItemLoaded = ({
   }, [setLimitLines])
 
   if (!record) {
-    return <ErrorMessage message="Invalid or unsupported post record" />
+    return <ErrorMessage message={_(msg`Invalid or unsupported post record`)} />
   }
 
   if (isHighlightedPost) {
@@ -332,6 +336,10 @@ let PostThreadItemLoaded = ({
               postCid={post.cid}
               postUri={post.uri}
               record={record}
+              richText={richText}
+              showAppealLabelItem={
+                post.author.did === currentAccount?.did && isModeratedPost
+              }
               style={{
                 paddingVertical: 6,
                 paddingHorizontal: 10,
@@ -351,13 +359,6 @@ let PostThreadItemLoaded = ({
                 includeMute
                 style={styles.alert}
               />
-              {post.author.did === currentAccount?.did ? (
-                <LabelInfo
-                  details={{uri: post.uri, cid: post.cid}}
-                  labels={post.labels}
-                  style={{marginBottom: 8}}
-                />
-              ) : null}
               {richText?.text ? (
                 <View
                   style={[
@@ -439,6 +440,7 @@ let PostThreadItemLoaded = ({
                 big
                 post={post}
                 record={record}
+                richText={richText}
                 onPressReply={onPressReply}
               />
             </View>
@@ -541,6 +543,7 @@ let PostThreadItemLoaded = ({
                   timestamp={post.indexedAt}
                   postHref={postHref}
                   showAvatar={isThreadedChild}
+                  avatarModeration={moderation.avatar}
                   avatarSize={28}
                   displayNameType="md-bold"
                   displayNameStyle={isThreadedChild && s.ml2}
@@ -563,7 +566,7 @@ let PostThreadItemLoaded = ({
                 ) : undefined}
                 {limitLines ? (
                   <TextLink
-                    text="Show More"
+                    text={_(msg`Show More`)}
                     style={pal.link}
                     onPress={onPressShowMore}
                     href="#"
@@ -586,6 +589,7 @@ let PostThreadItemLoaded = ({
                 <PostCtrls
                   post={post}
                   record={record}
+                  richText={richText}
                   onPressReply={onPressReply}
                 />
               </View>

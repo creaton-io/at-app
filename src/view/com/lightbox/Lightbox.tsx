@@ -1,5 +1,5 @@
 import React from 'react'
-import {Pressable, StyleSheet, View} from 'react-native'
+import {StyleSheet, View, Pressable} from 'react-native'
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome'
 import ImageView from './ImageViewing'
 import {shareImageModal, saveImageToMediaLibrary} from 'lib/media/manip'
@@ -15,6 +15,8 @@ import {
   ProfileImageLightbox,
   ImagesLightbox,
 } from '#/state/lightbox'
+import {Trans, msg} from '@lingui/macro'
+import {useLingui} from '@lingui/react'
 
 export function Lightbox() {
   const {activeLightbox} = useLightbox()
@@ -53,6 +55,7 @@ export function Lightbox() {
 }
 
 function LightboxFooter({imageIndex}: {imageIndex: number}) {
+  const {_} = useLingui()
   const {activeLightbox} = useLightbox()
   const [isAltExpanded, setAltExpanded] = React.useState(false)
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions()
@@ -60,12 +63,14 @@ function LightboxFooter({imageIndex}: {imageIndex: number}) {
   const saveImageToAlbumWithToasts = React.useCallback(
     async (uri: string) => {
       if (!permissionResponse || permissionResponse.granted === false) {
-        Toast.show('Permission to access camera roll is required.')
+        Toast.show(_(msg`Permission to access camera roll is required.`))
         if (permissionResponse?.canAskAgain) {
           requestPermission()
         } else {
           Toast.show(
-            'Permission to access camera roll was denied. Please enable it in your system settings.',
+            _(
+              msg`Permission to access camera roll was denied. Please enable it in your system settings.`,
+            ),
           )
         }
         return
@@ -78,7 +83,7 @@ function LightboxFooter({imageIndex}: {imageIndex: number}) {
         Toast.show(`Failed to save image: ${String(e)}`)
       }
     },
-    [permissionResponse, requestPermission],
+    [permissionResponse, requestPermission, _],
   )
 
   const lightbox = activeLightbox
@@ -102,12 +107,16 @@ function LightboxFooter({imageIndex}: {imageIndex: number}) {
       {altText ? (
         <Pressable
           onPress={() => setAltExpanded(!isAltExpanded)}
+          onLongPress={() => {}}
           accessibilityRole="button">
-          <Text
-            style={[s.gray3, styles.footerText]}
-            numberOfLines={isAltExpanded ? undefined : 3}>
-            {altText}
-          </Text>
+          <View>
+            <Text
+              selectable
+              style={[s.gray3, styles.footerText]}
+              numberOfLines={isAltExpanded ? undefined : 3}>
+              {altText}
+            </Text>
+          </View>
         </Pressable>
       ) : null}
       <View style={styles.footerBtns}>
@@ -117,7 +126,7 @@ function LightboxFooter({imageIndex}: {imageIndex: number}) {
           onPress={() => saveImageToAlbumWithToasts(uri)}>
           <FontAwesomeIcon icon={['far', 'floppy-disk']} style={s.white} />
           <Text type="xl" style={s.white}>
-            Save
+            <Trans context="action">Save</Trans>
           </Text>
         </Button>
         <Button
@@ -126,7 +135,7 @@ function LightboxFooter({imageIndex}: {imageIndex: number}) {
           onPress={() => shareImageModal({uri})}>
           <FontAwesomeIcon icon="arrow-up-from-bracket" style={s.white} />
           <Text type="xl" style={s.white}>
-            Share
+            <Trans context="action">Share</Trans>
           </Text>
         </Button>
       </View>

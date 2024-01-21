@@ -32,6 +32,7 @@ import {POST_IMG_MAX} from 'lib/constants'
 export interface TextInputRef {
   focus: () => void
   blur: () => void
+  getCursorPosition: () => DOMRect | undefined
 }
 
 interface TextInputProps extends ComponentProps<typeof RNTextInput> {
@@ -74,6 +75,7 @@ export const TextInput = forwardRef(function TextInputImpl(
     blur: () => {
       textInput.current?.blur()
     },
+    getCursorPosition: () => undefined, // Not implemented on native
   }))
 
   const onChangeText = useCallback(
@@ -215,7 +217,13 @@ export const TextInput = forwardRef(function TextInputImpl(
         autoFocus={true}
         allowFontScaling
         multiline
-        style={[pal.text, styles.textInput, styles.textInputFormatting]}
+        numberOfLines={4}
+        style={[
+          pal.text,
+          styles.textInput,
+          styles.textInputFormatting,
+          {textAlignVertical: 'top'},
+        ]}
         {...props}>
         {textDecorated}
       </PasteInput>

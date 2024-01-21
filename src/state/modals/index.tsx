@@ -6,6 +6,7 @@ import {Image as RNImage} from 'react-native-image-crop-picker'
 import {ImageModel} from '#/state/models/media/image'
 import {GalleryModel} from '#/state/models/media/gallery'
 import {useNonReactiveCallback} from '#/lib/hooks/useNonReactiveCallback'
+import {EmbedPlayerSource} from '#/lib/strings/embed-player.ts'
 import {ThreadgateSetting} from '../queries/threadgate'
 
 export interface ConfirmModal {
@@ -180,6 +181,17 @@ export interface LinkWarningModal {
   href: string
 }
 
+export interface EmbedConsentModal {
+  name: 'embed-consent'
+  source: EmbedPlayerSource
+  onAccept: () => void
+}
+
+export interface InAppBrowserConsentModal {
+  name: 'in-app-browser-consent'
+  href: string
+}
+
 export type Modal =
   // Account
   | AddAppPasswordModal
@@ -223,6 +235,8 @@ export type Modal =
   // Generic
   | ConfirmModal
   | LinkWarningModal
+  | EmbedConsentModal
+  | InAppBrowserConsentModal
 
 const ModalContext = React.createContext<{
   isModalActive: boolean

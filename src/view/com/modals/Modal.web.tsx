@@ -34,6 +34,7 @@ import * as BirthDateSettingsModal from './BirthDateSettings'
 import * as VerifyEmailModal from './VerifyEmail'
 import * as ChangeEmailModal from './ChangeEmail'
 import * as LinkWarningModal from './LinkWarning'
+import * as EmbedConsentModal from './EmbedConsent'
 
 export function ModalsContainer() {
   const {isModalActive, activeModals} = useModals()
@@ -62,7 +63,11 @@ function Modal({modal}: {modal: ModalIface}) {
   }
 
   const onPressMask = () => {
-    if (modal.name === 'crop-image' || modal.name === 'edit-image') {
+    if (
+      modal.name === 'crop-image' ||
+      modal.name === 'edit-image' ||
+      modal.name === 'alt-text-image'
+    ) {
       return // dont close on mask presses during crop
     }
     closeModal()
@@ -129,6 +134,8 @@ function Modal({modal}: {modal: ModalIface}) {
     element = <ChangeEmailModal.Component />
   } else if (modal.name === 'link-warning') {
     element = <LinkWarningModal.Component {...modal} />
+  } else if (modal.name === 'embed-consent') {
+    element = <EmbedConsentModal.Component {...modal} />
   } else {
     return null
   }

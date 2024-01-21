@@ -1,6 +1,4 @@
 import * as React from 'react'
-import {StyleSheet} from 'react-native'
-import * as SplashScreen from 'expo-splash-screen'
 import {
   NavigationContainer,
   createNavigationContainerRef,
@@ -26,8 +24,7 @@ import {
 import {BottomBar} from './view/shell/bottom-bar/BottomBar'
 import {buildStateObject} from 'lib/routes/helpers'
 import {State, RouteParams} from 'lib/routes/types'
-import {colors} from 'lib/styles'
-import {isNative} from 'platform/detection'
+import {isAndroid, isNative} from 'platform/detection'
 import {useColorSchemeStyle} from 'lib/hooks/useColorSchemeStyle'
 import {router} from './routes'
 import {usePalette} from 'lib/hooks/usePalette'
@@ -62,7 +59,7 @@ import {ProfileListScreen} from './view/screens/ProfileList'
 import {PostThreadScreen} from './view/screens/PostThread'
 import {PostLikedByScreen} from './view/screens/PostLikedBy'
 import {PostRepostedByScreen} from './view/screens/PostRepostedBy'
-import {DebugScreen} from './view/screens/Debug'
+import {Storybook} from './view/screens/Storybook'
 import {LogScreen} from './view/screens/Log'
 import {SupportScreen} from './view/screens/Support'
 import {PrivacyPolicyScreen} from './view/screens/PrivacyPolicy'
@@ -75,7 +72,10 @@ import {ModerationBlockedAccounts} from 'view/screens/ModerationBlockedAccounts'
 import {SavedFeeds} from 'view/screens/SavedFeeds'
 import {PreferencesHomeFeed} from 'view/screens/PreferencesHomeFeed'
 import {PreferencesThreads} from 'view/screens/PreferencesThreads'
+import {PreferencesExternalEmbeds} from '#/view/screens/PreferencesExternalEmbeds'
 import {createNativeStackNavigatorWithAuth} from './view/shell/createNativeStackNavigatorWithAuth'
+import {msg} from '@lingui/macro'
+import {i18n, MessageDescriptor} from '@lingui/core'
 
 const navigationRef = createNavigationContainerRef<AllNavigatorParams>()
 
@@ -93,55 +93,56 @@ const Tab = createBottomTabNavigator<BottomTabNavigatorParams>()
  * These "common screens" are reused across stacks.
  */
 function commonScreens(Stack: typeof HomeTab, unreadCountLabel?: string) {
-  const title = (page: string) => bskyTitle(page, unreadCountLabel)
+  const title = (page: MessageDescriptor) =>
+    bskyTitle(i18n._(page), unreadCountLabel)
 
   return (
     <>
       <Stack.Screen
         name="NotFound"
         getComponent={() => NotFoundScreen}
-        options={{title: title('Not Found')}}
+        options={{title: title(msg`Not Found`)}}
       />
       <Stack.Screen
         name="Lists"
         component={ListsScreen}
-        options={{title: title('Lists'), requireAuth: true}}
+        options={{title: title(msg`Lists`), requireAuth: true}}
       />
       <Stack.Screen
         name="Moderation"
         getComponent={() => ModerationScreen}
-        options={{title: title('Moderation'), requireAuth: true}}
+        options={{title: title(msg`Moderation`), requireAuth: true}}
       />
       <Stack.Screen
         name="ModerationModlists"
         getComponent={() => ModerationModlistsScreen}
-        options={{title: title('Moderation Lists'), requireAuth: true}}
+        options={{title: title(msg`Moderation Lists`), requireAuth: true}}
       />
       <Stack.Screen
         name="ModerationMutedAccounts"
         getComponent={() => ModerationMutedAccounts}
-        options={{title: title('Muted Accounts'), requireAuth: true}}
+        options={{title: title(msg`Muted Accounts`), requireAuth: true}}
       />
       <Stack.Screen
         name="ModerationBlockedAccounts"
         getComponent={() => ModerationBlockedAccounts}
-        options={{title: title('Blocked Accounts'), requireAuth: true}}
+        options={{title: title(msg`Blocked Accounts`), requireAuth: true}}
       />
       <Stack.Screen
         name="Settings"
         getComponent={() => SettingsScreen}
-        options={{title: title('Settings'), requireAuth: true}}
+        options={{title: title(msg`Settings`), requireAuth: true}}
       />
       <Stack.Screen
         name="LanguageSettings"
         getComponent={() => LanguageSettingsScreen}
-        options={{title: title('Language Settings'), requireAuth: true}}
+        options={{title: title(msg`Language Settings`), requireAuth: true}}
       />
       <Stack.Screen
         name="Profile"
         getComponent={() => ProfileScreen}
         options={({route}) => ({
-          title: title(`@${route.params.name}`),
+          title: bskyTitle(`@${route.params.name}`, unreadCountLabel),
           animation: 'none',
         })}
       />
@@ -149,100 +150,114 @@ function commonScreens(Stack: typeof HomeTab, unreadCountLabel?: string) {
         name="ProfileFollowers"
         getComponent={() => ProfileFollowersScreen}
         options={({route}) => ({
-          title: title(`People following @${route.params.name}`),
+          title: title(msg`People following @${route.params.name}`),
         })}
       />
       <Stack.Screen
         name="ProfileFollows"
         getComponent={() => ProfileFollowsScreen}
         options={({route}) => ({
-          title: title(`People followed by @${route.params.name}`),
+          title: title(msg`People followed by @${route.params.name}`),
         })}
       />
       <Stack.Screen
         name="ProfileList"
         getComponent={() => ProfileListScreen}
-        options={{title: title('List'), requireAuth: true}}
+        options={{title: title(msg`List`), requireAuth: true}}
       />
       <Stack.Screen
         name="PostThread"
         getComponent={() => PostThreadScreen}
-        options={({route}) => ({title: title(`Post by @${route.params.name}`)})}
+        options={({route}) => ({
+          title: title(msg`Post by @${route.params.name}`),
+        })}
       />
       <Stack.Screen
         name="PostLikedBy"
         getComponent={() => PostLikedByScreen}
-        options={({route}) => ({title: title(`Post by @${route.params.name}`)})}
+        options={({route}) => ({
+          title: title(msg`Post by @${route.params.name}`),
+        })}
       />
       <Stack.Screen
         name="PostRepostedBy"
         getComponent={() => PostRepostedByScreen}
-        options={({route}) => ({title: title(`Post by @${route.params.name}`)})}
+        options={({route}) => ({
+          title: title(msg`Post by @${route.params.name}`),
+        })}
       />
       <Stack.Screen
         name="ProfileFeed"
         getComponent={() => ProfileFeedScreen}
-        options={{title: title('Feed')}}
+        options={{title: title(msg`Feed`), requireAuth: true}}
       />
       <Stack.Screen
         name="ProfileFeedLikedBy"
         getComponent={() => ProfileFeedLikedByScreen}
-        options={{title: title('Liked by')}}
+        options={{title: title(msg`Liked by`)}}
       />
       <Stack.Screen
         name="Debug"
-        getComponent={() => DebugScreen}
-        options={{title: title('Debug'), requireAuth: true}}
+        getComponent={() => Storybook}
+        options={{title: title(msg`Storybook`), requireAuth: true}}
       />
       <Stack.Screen
         name="Log"
         getComponent={() => LogScreen}
-        options={{title: title('Log'), requireAuth: true}}
+        options={{title: title(msg`Log`), requireAuth: true}}
       />
       <Stack.Screen
         name="Support"
         getComponent={() => SupportScreen}
-        options={{title: title('Support')}}
+        options={{title: title(msg`Support`)}}
       />
       <Stack.Screen
         name="PrivacyPolicy"
         getComponent={() => PrivacyPolicyScreen}
-        options={{title: title('Privacy Policy')}}
+        options={{title: title(msg`Privacy Policy`)}}
       />
       <Stack.Screen
         name="TermsOfService"
         getComponent={() => TermsOfServiceScreen}
-        options={{title: title('Terms of Service')}}
+        options={{title: title(msg`Terms of Service`)}}
       />
       <Stack.Screen
         name="CommunityGuidelines"
         getComponent={() => CommunityGuidelinesScreen}
-        options={{title: title('Community Guidelines')}}
+        options={{title: title(msg`Community Guidelines`)}}
       />
       <Stack.Screen
         name="CopyrightPolicy"
         getComponent={() => CopyrightPolicyScreen}
-        options={{title: title('Copyright Policy')}}
+        options={{title: title(msg`Copyright Policy`)}}
       />
       <Stack.Screen
         name="AppPasswords"
         getComponent={() => AppPasswords}
-        options={{title: title('App Passwords'), requireAuth: true}}
+        options={{title: title(msg`App Passwords`), requireAuth: true}}
       />
       <Stack.Screen
         name="SavedFeeds"
         getComponent={() => SavedFeeds}
-        options={{title: title('Edit My Feeds'), requireAuth: true}}
+        options={{title: title(msg`Edit My Feeds`), requireAuth: true}}
       />
       <Stack.Screen
         name="PreferencesHomeFeed"
         getComponent={() => PreferencesHomeFeed}
-        options={{title: title('Home Feed Preferences'), requireAuth: true}}
+        options={{title: title(msg`Home Feed Preferences`), requireAuth: true}}
       />
       <Stack.Screen
         name="PreferencesThreads"
         getComponent={() => PreferencesThreads}
-        options={{title: title('Threads Preferences'), requireAuth: true}}
+        options={{title: title(msg`Threads Preferences`), requireAuth: true}}
+      />
+      <Stack.Screen
+        name="PreferencesExternalEmbeds"
+        getComponent={() => PreferencesExternalEmbeds}
+        options={{
+          title: title(msg`External Media Preferences`),
+          requireAuth: true,
+        }}
       />
     </>
   )
@@ -282,33 +297,39 @@ function TabsNavigator() {
 }
 
 function HomeTabNavigator() {
-  const contentStyle = useColorSchemeStyle(styles.bgLight, styles.bgDark)
+  const pal = usePalette('default')
 
   return (
     <HomeTab.Navigator
       screenOptions={{
+        animation: isAndroid ? 'none' : undefined,
         gestureEnabled: true,
         fullScreenGestureEnabled: true,
         headerShown: false,
         animationDuration: 250,
-        contentStyle,
+        contentStyle: pal.view,
       }}>
-      <HomeTab.Screen name="Home" getComponent={() => HomeScreen} />
+      <HomeTab.Screen
+        name="Home"
+        getComponent={() => HomeScreen}
+        options={{requireAuth: true}}
+      />
       {commonScreens(HomeTab)}
     </HomeTab.Navigator>
   )
 }
 
 function SearchTabNavigator() {
-  const contentStyle = useColorSchemeStyle(styles.bgLight, styles.bgDark)
+  const pal = usePalette('default')
   return (
     <SearchTab.Navigator
       screenOptions={{
+        animation: isAndroid ? 'none' : undefined,
         gestureEnabled: true,
         fullScreenGestureEnabled: true,
         headerShown: false,
         animationDuration: 250,
-        contentStyle,
+        contentStyle: pal.view,
       }}>
       <SearchTab.Screen name="Search" getComponent={() => SearchScreen} />
       {commonScreens(SearchTab as typeof HomeTab)}
@@ -317,32 +338,38 @@ function SearchTabNavigator() {
 }
 
 function FeedsTabNavigator() {
-  const contentStyle = useColorSchemeStyle(styles.bgLight, styles.bgDark)
+  const pal = usePalette('default')
   return (
     <FeedsTab.Navigator
       screenOptions={{
+        animation: isAndroid ? 'none' : undefined,
         gestureEnabled: true,
         fullScreenGestureEnabled: true,
         headerShown: false,
         animationDuration: 250,
-        contentStyle,
+        contentStyle: pal.view,
       }}>
-      <FeedsTab.Screen name="Feeds" getComponent={() => FeedsScreen} />
+      <FeedsTab.Screen
+        name="Feeds"
+        getComponent={() => FeedsScreen}
+        options={{requireAuth: true}}
+      />
       {commonScreens(FeedsTab as typeof HomeTab)}
     </FeedsTab.Navigator>
   )
 }
 
 function NotificationsTabNavigator() {
-  const contentStyle = useColorSchemeStyle(styles.bgLight, styles.bgDark)
+  const pal = usePalette('default')
   return (
     <NotificationsTab.Navigator
       screenOptions={{
+        animation: isAndroid ? 'none' : undefined,
         gestureEnabled: true,
         fullScreenGestureEnabled: true,
         headerShown: false,
         animationDuration: 250,
-        contentStyle,
+        contentStyle: pal.view,
       }}>
       <NotificationsTab.Screen
         name="Notifications"
@@ -355,15 +382,16 @@ function NotificationsTabNavigator() {
 }
 
 function MyProfileTabNavigator() {
-  const contentStyle = useColorSchemeStyle(styles.bgLight, styles.bgDark)
+  const pal = usePalette('default')
   return (
     <MyProfileTab.Navigator
       screenOptions={{
+        animation: isAndroid ? 'none' : undefined,
         gestureEnabled: true,
         fullScreenGestureEnabled: true,
         headerShown: false,
         animationDuration: 250,
-        contentStyle,
+        contentStyle: pal.view,
       }}>
       <MyProfileTab.Screen
         // @ts-ignore // TODO: fix this broken type in ProfileScreen
@@ -386,7 +414,7 @@ const FlatNavigator = () => {
   const pal = usePalette('default')
   const numUnread = useUnreadNotifications()
 
-  const title = (page: string) => bskyTitle(page, numUnread)
+  const title = (page: MessageDescriptor) => bskyTitle(i18n._(page), numUnread)
   return (
     <Flat.Navigator
       screenOptions={{
@@ -394,27 +422,27 @@ const FlatNavigator = () => {
         fullScreenGestureEnabled: true,
         headerShown: false,
         animationDuration: 250,
-        contentStyle: [pal.view],
+        contentStyle: pal.view,
       }}>
       <Flat.Screen
         name="Home"
         getComponent={() => HomeScreen}
-        options={{title: title('Home')}}
+        options={{title: title(msg`Home`), requireAuth: true}}
       />
       <Flat.Screen
         name="Search"
         getComponent={() => SearchScreen}
-        options={{title: title('Search')}}
+        options={{title: title(msg`Search`)}}
       />
       <Flat.Screen
         name="Feeds"
         getComponent={() => FeedsScreen}
-        options={{title: title('Feeds')}}
+        options={{title: title(msg`Feeds`), requireAuth: true}}
       />
       <Flat.Screen
         name="Notifications"
         getComponent={() => NotificationsScreen}
-        options={{title: title('Notifications'), requireAuth: true}}
+        options={{title: title(msg`Notifications`), requireAuth: true}}
       />
       {commonScreens(Flat as typeof HomeTab, numUnread)}
     </Flat.Navigator>
@@ -489,7 +517,6 @@ function RoutesContainer({children}: React.PropsWithChildren<{}>) {
       linking={LINKING}
       theme={theme}
       onReady={() => {
-        SplashScreen.hideAsync()
         logModuleInitTime()
         onReady()
       }}>
@@ -590,15 +617,6 @@ function handleLink(url: string) {
     navigate(name, params)
   }
 }
-
-const styles = StyleSheet.create({
-  bgDark: {
-    backgroundColor: colors.black,
-  },
-  bgLight: {
-    backgroundColor: colors.white,
-  },
-})
 
 let didInit = false
 function logModuleInitTime() {

@@ -1,7 +1,6 @@
 import React from 'react'
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -23,14 +22,16 @@ import {
   useSetSaveFeedsMutation,
   DEFAULT_PROD_FEEDS,
 } from '#/state/queries/preferences'
-import {IS_PROD} from '#/lib/constants'
+import {FEEDBACK_FORM_URL, IS_PROD} from '#/lib/constants'
 
 import {Step1} from './Step1'
 import {Step2} from './Step2'
 import {Step3} from './Step3'
+import {useWebMediaQueries} from '#/lib/hooks/useWebMediaQueries'
+import {TextLink} from '../../util/Link'
 
 export function CreateAccount({onPressBack}: {onPressBack: () => void}) {
-  const {track, screen} = useAnalytics()
+  const {screen} = useAnalytics()
   const pal = usePalette('default')
   const {_} = useLingui()
   const [uiState, uiDispatch] = useCreateAccount()
@@ -38,6 +39,7 @@ export function CreateAccount({onPressBack}: {onPressBack: () => void}) {
   const {createAccount} = useSessionApi()
   const {mutate: setBirthDate} = usePreferencesSetBirthDateMutation()
   const {mutate: setSavedFeeds} = useSetSaveFeedsMutation()
+  const {isTabletOrDesktop} = useWebMediaQueries()
 
   React.useEffect(() => {
     screen('CreateAccount')
@@ -93,21 +95,17 @@ export function CreateAccount({onPressBack}: {onPressBack: () => void}) {
           uiDispatch,
           _,
         })
-        track('Create Account')
         setBirthDate({birthDate: uiState.birthDate})
         if (IS_PROD(uiState.serviceUrl)) {
           setSavedFeeds(DEFAULT_PROD_FEEDS)
         }
       } catch {
         // dont need to handle here
-      } finally {
-        track('Try Create Account')
       }
     }
   }, [
     uiState,
     uiDispatch,
-    track,
     onboardingDispatch,
     createAccount,
     setBirthDate,
@@ -120,68 +118,87 @@ export function CreateAccount({onPressBack}: {onPressBack: () => void}) {
 
   return (
     <LoggedOutLayout
-      leadin={`Step ${uiState.step}`}
+      leadin=""
       title={_(msg`Create Account`)}
       description={_(msg`We're so excited to have you join us!`)}>
       <ScrollView testID="createAccount" style={pal.view}>
-        <KeyboardAvoidingView behavior="padding">
-          <View style={styles.stepContainer}>
-            {uiState.step === 1 && (
-              <Step1 uiState={uiState} uiDispatch={uiDispatch} />
-            )}
-            {uiState.step === 2 && (
-              <Step2 uiState={uiState} uiDispatch={uiDispatch} />
-            )}
-            {uiState.step === 3 && (
-              <Step3 uiState={uiState} uiDispatch={uiDispatch} />
-            )}
-          </View>
-          <View style={[s.flexRow, s.pl20, s.pr20]}>
+        <View style={styles.stepContainer}>
+          {uiState.step === 1 && (
+            <Step1 uiState={uiState} uiDispatch={uiDispatch} />
+          )}
+          {uiState.step === 2 && (
+            <Step2 uiState={uiState} uiDispatch={uiDispatch} />
+          )}
+          {uiState.step === 3 && (
+            <Step3 uiState={uiState} uiDispatch={uiDispatch} />
+          )}
+        </View>
+        <View style={[s.flexRow, s.pl20, s.pr20]}>
+          <TouchableOpacity
+            onPress={onPressBackInner}
+            testID="backBtn"
+            accessibilityRole="button">
+            <Text type="xl" style={pal.link}>
+              <Trans>Back</Trans>
+            </Text>
+          </TouchableOpacity>
+          <View style={s.flex1} />
+          {uiState.canNext ? (
             <TouchableOpacity
-              onPress={onPressBackInner}
-              testID="backBtn"
+              testID="nextBtn"
+              onPress={onPressNext}
               accessibilityRole="button">
-              <Text type="xl" style={pal.link}>
-                <Trans>Back</Trans>
+              {uiState.isProcessing ? (
+                <ActivityIndicator />
+              ) : (
+                <Text type="xl-bold" style={[pal.link, s.pr5]}>
+                  <Trans>Next</Trans>
+                </Text>
+              )}
+            </TouchableOpacity>
+          ) : serviceInfoError ? (
+            <TouchableOpacity
+              testID="retryConnectBtn"
+              onPress={() => refetchServiceInfo()}
+              accessibilityRole="button"
+              accessibilityLabel={_(msg`Retry`)}
+              accessibilityHint=""
+              accessibilityLiveRegion="polite">
+              <Text type="xl-bold" style={[pal.link, s.pr5]}>
+                <Trans>Retry</Trans>
               </Text>
             </TouchableOpacity>
-            <View style={s.flex1} />
-            {uiState.canNext ? (
-              <TouchableOpacity
-                testID="nextBtn"
-                onPress={onPressNext}
-                accessibilityRole="button">
-                {uiState.isProcessing ? (
-                  <ActivityIndicator />
-                ) : (
-                  <Text type="xl-bold" style={[pal.link, s.pr5]}>
-                    <Trans>Next</Trans>
-                  </Text>
-                )}
-              </TouchableOpacity>
-            ) : serviceInfoError ? (
-              <TouchableOpacity
-                testID="retryConnectBtn"
-                onPress={() => refetchServiceInfo()}
-                accessibilityRole="button"
-                accessibilityLabel={_(msg`Retry`)}
-                accessibilityHint=""
-                accessibilityLiveRegion="polite">
-                <Text type="xl-bold" style={[pal.link, s.pr5]}>
-                  <Trans>Retry</Trans>
-                </Text>
-              </TouchableOpacity>
-            ) : serviceInfoIsFetching ? (
-              <>
-                <ActivityIndicator color="#fff" />
-                <Text type="xl" style={[pal.text, s.pr5]}>
-                  <Trans>Connecting...</Trans>
-                </Text>
-              </>
-            ) : undefined}
+          ) : serviceInfoIsFetching ? (
+            <>
+              <ActivityIndicator color="#fff" />
+              <Text type="xl" style={[pal.text, s.pr5]}>
+                <Trans>Connecting...</Trans>
+              </Text>
+            </>
+          ) : undefined}
+        </View>
+
+        <View style={styles.stepContainer}>
+          <View
+            style={[
+              s.flexRow,
+              s.alignCenter,
+              pal.viewLight,
+              {borderRadius: 8, paddingHorizontal: 14, paddingVertical: 12},
+            ]}>
+            <Text type="md" style={pal.textLight}>
+              <Trans>Having trouble?</Trans>{' '}
+            </Text>
+            <TextLink
+              type="md"
+              style={pal.link}
+              text={_(msg`Contact support`)}
+              href={FEEDBACK_FORM_URL({email: uiState.email})}
+            />
           </View>
-          <View style={s.footerSpacer} />
-        </KeyboardAvoidingView>
+        </View>
+
+        <View style={{height: isTabletOrDesktop ? 50 : 400}} />
       </ScrollView>
     </LoggedOutLayout>
   )

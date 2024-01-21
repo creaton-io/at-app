@@ -25,7 +25,7 @@ export function Step3({
   const {_} = useLingui()
   return (
     <View>
-      <StepHeader step="3" title={_(msg`Your user handle`)} />
+      <StepHeader uiState={uiState} title={_(msg`Your user handle`)} />
       <View style={s.pb10}>
         <TextInput
           testID="handleInput"
@@ -36,7 +36,7 @@ export function Step3({
           onChange={value => uiDispatch({type: 'set-handle', value})}
           // TODO: Add explicit text label
           accessibilityLabel={_(msg`User handle`)}
-          accessibilityHint="Input your user handle"
+          accessibilityHint={_(msg`Input your user handle`)}
         />
         <Text type="lg" style={[pal.text, s.pl5, s.pt10]}>
           <Trans>Your full handle will be</Trans>{' '}

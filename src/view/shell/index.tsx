@@ -20,10 +20,6 @@ import {usePalette} from 'lib/hooks/usePalette'
 import {RoutesContainer, TabsNavigator} from '../../Navigation'
 import {isStateAtTabRoot} from 'lib/routes/helpers'
 import {
-  SafeAreaProvider,
-  initialWindowMetrics,
-} from 'react-native-safe-area-context'
-import {
   useIsDrawerOpen,
   useSetDrawerOpen,
   useIsDrawerSwipeDisabled,
@@ -32,6 +28,7 @@ import {isAndroid} from 'platform/detection'
 import {useSession} from '#/state/session'
 import {useCloseAnyActiveElement} from '#/state/util'
 import * as notifications from 'lib/notifications/notifications'
+import {Outlet as PortalOutlet} from '#/components/Portal'
 
 function ShellInner() {
   const isDrawerOpen = useIsDrawerOpen()
@@ -98,6 +95,7 @@ function ShellInner() {
       </View>
       <Composer winHeight={winDim.height} />
       <ModalsContainer />
+      <PortalOutlet />
       <Lightbox />
     </>
   )
@@ -107,14 +105,12 @@ export const Shell: React.FC = function ShellImpl() {
   const pal = usePalette('default')
   const theme = useTheme()
   return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics} style={pal.view}>
-      <View testID="mobileShellView" style={[styles.outerContainer, pal.view]}>
-        <StatusBar style={theme.colorScheme === 'dark' ? 'light' : 'dark'} />
-        <RoutesContainer>
-          <ShellInner />
-        </RoutesContainer>
-      </View>
-    </SafeAreaProvider>
+    <View testID="mobileShellView" style={[styles.outerContainer, pal.view]}>
+      <StatusBar style={theme.colorScheme === 'dark' ? 'light' : 'dark'} />
+      <RoutesContainer>
+        <ShellInner />
+      </RoutesContainer>
+    </View>
   )
 }
 
