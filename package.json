@@ -181,7 +181,8 @@
     "viem": "1.21.4",
     "wagmi": "1.4.13",
     "zeego": "^1.6.2",
-    "zod": "^3.20.2"
+    "zod": "^3.20.2",
+    "react-native-ui-text-view": "link:./modules/react-native-ui-text-view"
   },
   "devDependencies": {
     "@atproto/dev-env": "^0.2.19",
@@ -212,6 +213,7 @@
     "@types/lodash.shuffle": "^4.2.7",
     "@types/psl": "^1.1.1",
     "@types/react-avatar-editor": "^13.0.0",
+    "@types/react-dom": "^18.2.18",
     "@types/react-responsive": "^8.0.5",
     "@types/react-test-renderer": "^17.0.1",
     "@typescript-eslint/eslint-plugin": "^5.48.2",
