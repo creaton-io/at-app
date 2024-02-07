@@ -10,7 +10,6 @@ import 'view/icons'
 import {ThemeProvider as Alf} from '#/alf'
 import {useColorModeTheme} from '#/alf/util/useColorModeTheme'
 import {init as initPersistedState} from '#/state/persisted'
-import {useColorMode} from 'state/shell'
 import {Shell} from 'view/shell/index'
 import {ToastContainer} from 'view/com/util/Toast.web'
 import {ThemeProvider} from 'lib/ThemeContext'
@@ -58,8 +57,7 @@ createWeb3Modal({wagmiConfig, projectId, chains})
 function InnerApp() {
   const {isInitialLoad, currentAccount} = useSession()
   const {resumeSession} = useSessionApi()
-  const colorMode = useColorMode()
-  const theme = useColorModeTheme(colorMode)
+  const theme = useColorModeTheme()
 
   // init
   useEffect(() => {
@@ -77,7 +75,7 @@ function InnerApp() {
         key={currentAccount?.did}>
         <LoggedOutViewProvider>
           <UnreadNotifsProvider>
-            <ThemeProvider theme={colorMode}>
+            <ThemeProvider theme={theme}>
               {/* All components should be within this provider */}
               <RootSiblingParent>
                 <SafeAreaProvider>

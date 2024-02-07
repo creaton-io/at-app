@@ -3,14 +3,21 @@
 {% block head_title %}Creaton{% endblock %}
 
 {% block html_head_extra -%}
-  <meta name="description" content="Create what's next.">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Creaton Social">
-  <meta property="og:description" content="Create what's next.">
+  <meta property="og:title" content="Bluesky" />
+  <meta name="twitter:title" content="Bluesky" />
+
+  <meta name="description" content="Create what's next." />
+  <meta name="og:description" content="Create what's next." />
+  <meta name="twitter:description" content="Create what's next." />
+
+  <meta property="og:url" content="https://bsky.app" />
+  <meta name="twitter:url" content="https://bsky.app" />
+
   <meta property="og:image" content="/static/social-card-default.png">
-  <meta property="og:site_name" content="Bluesky Social">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:site" content="@bluesky">
+  <meta property="twitter:image" content="/static/social-card-default.png">
+
+  <meta name="twitter:site" content="@creaton" />
+  <meta name="twitter:card" content="summary_large_image" />
 {%- endblock %}
 
 {% block noscript_extra %}
