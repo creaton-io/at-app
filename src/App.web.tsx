@@ -22,6 +22,7 @@ import {Provider as MutedThreadsProvider} from 'state/muted-threads'
 import {Provider as InvitesStateProvider} from 'state/invites'
 import {Provider as PrefsStateProvider} from 'state/preferences'
 import {Provider as LoggedOutViewProvider} from 'state/shell/logged-out'
+import {Provider as SelectedFeedProvider} from 'state/shell/selected-feed'
 import I18nProvider from './locale/i18nProvider'
 import {
   Provider as SessionProvider,
@@ -31,6 +32,7 @@ import {
 import {Provider as UnreadNotifsProvider} from 'state/queries/notifications/unread'
 import * as persisted from '#/state/persisted'
 import {Provider as PortalProvider} from '#/components/Portal'
+import {useIntentHandler} from 'lib/hooks/useIntentHandler'
 
 import {createWeb3Modal, defaultWagmiConfig} from '@web3modal/wagmi/react'
 
@@ -58,6 +60,7 @@ function InnerApp() {
   const {isInitialLoad, currentAccount} = useSession()
   const {resumeSession} = useSessionApi()
   const theme = useColorModeTheme()
+  useIntentHandler()
 
   // init
   useEffect(() => {
@@ -74,17 +77,19 @@ function InnerApp() {
         // Resets the entire tree below when it changes:
         key={currentAccount?.did}>
         <LoggedOutViewProvider>
-          <UnreadNotifsProvider>
-            <ThemeProvider theme={theme}>
-              {/* All components should be within this provider */}
-              <RootSiblingParent>
-                <SafeAreaProvider>
-                  <Shell />
-                </SafeAreaProvider>
-              </RootSiblingParent>
-              <ToastContainer />
-            </ThemeProvider>
-          </UnreadNotifsProvider>
+          <SelectedFeedProvider>
+            <UnreadNotifsProvider>
+              <ThemeProvider theme={theme}>
+                {/* All components should be within this provider */}
+                <RootSiblingParent>
+                  <SafeAreaProvider>
+                    <Shell />
+                  </SafeAreaProvider>
+                </RootSiblingParent>
+                <ToastContainer />
+              </ThemeProvider>
+            </UnreadNotifsProvider>
+          </SelectedFeedProvider>
         </LoggedOutViewProvider>
       </React.Fragment>
     </Alf>

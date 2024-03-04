@@ -240,7 +240,7 @@ export function lh(
   height: number,
 ): TextStyle {
   return {
-    lineHeight: (theme.typography[type].fontSize || 16) * height,
+    lineHeight: Math.round((theme.typography[type].fontSize || 16) * height),
   }
 }
 

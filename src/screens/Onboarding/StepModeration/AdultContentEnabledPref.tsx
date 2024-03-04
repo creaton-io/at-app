@@ -96,7 +96,7 @@ export function AdultContentEnabledPref({
           <Text
             style={[
               a.flex_1,
-              t.atoms.text_contrast_700,
+              t.atoms.text_contrast_medium,
               a.leading_snug,
               {paddingTop: 1},
             ]}>
@@ -114,7 +114,7 @@ export function AdultContentEnabledPref({
           </Trans>
         </Prompt.Description>
         <Prompt.Actions>
-          <Prompt.Action onPress={prompt.close}>OK</Prompt.Action>
+          <Prompt.Action onPress={() => prompt.close()}>OK</Prompt.Action>
         </Prompt.Actions>
       </Prompt.Outer>
     </>

@@ -200,10 +200,10 @@ function ComposeBtn() {
   const fetchHandle = useFetchHandle()
 
   const getProfileHandle = async () => {
-    const {routes} = getState()
-    const currentRoute = routes[routes.length - 1]
+    const routes = getState()?.routes
+    const currentRoute = routes?.[routes?.length - 1]
 
-    if (currentRoute.name === 'Profile') {
+    if (currentRoute?.name === 'Profile') {
       let handle: string | undefined = (
         currentRoute.params as CommonNavigatorParams['Profile']
       ).name
@@ -334,7 +334,7 @@ export function DesktopLeftNav() {
             }
             iconFilled={
               <HashtagIcon
-                strokeWidth={2.5}
+                strokeWidth={4}
                 style={pal.text as FontAwesomeIconStyle}
                 size={isDesktop ? 24 : 28}
               />

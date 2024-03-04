@@ -32,6 +32,7 @@ import {Provider as MutedThreadsProvider} from 'state/muted-threads'
 import {Provider as InvitesStateProvider} from 'state/invites'
 import {Provider as PrefsStateProvider} from 'state/preferences'
 import {Provider as LoggedOutViewProvider} from 'state/shell/logged-out'
+import {Provider as SelectedFeedProvider} from 'state/shell/selected-feed'
 import I18nProvider from './locale/i18nProvider'
 import {
   Provider as SessionProvider,
@@ -44,6 +45,7 @@ import {Splash} from '#/Splash'
 import {Provider as PortalProvider} from '#/components/Portal'
 import {msg} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
+import {useIntentHandler} from 'lib/hooks/useIntentHandler'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -52,6 +54,7 @@ function InnerApp() {
   const {resumeSession} = useSessionApi()
   const theme = useColorModeTheme()
   const {_} = useLingui()
+  useIntentHandler()
 
   // init
   useEffect(() => {
@@ -72,17 +75,19 @@ function InnerApp() {
             // Resets the entire tree below when it changes:
             key={currentAccount?.did}>
             <LoggedOutViewProvider>
-              <UnreadNotifsProvider>
-                <ThemeProvider theme={theme}>
-                  {/* All components should be within this provider */}
-                  <RootSiblingParent>
-                    <GestureHandlerRootView style={s.h100pct}>
-                      <TestCtrls />
-                      <Shell />
-                    </GestureHandlerRootView>
-                  </RootSiblingParent>
-                </ThemeProvider>
-              </UnreadNotifsProvider>
+              <SelectedFeedProvider>
+                <UnreadNotifsProvider>
+                  <ThemeProvider theme={theme}>
+                    {/* All components should be within this provider */}
+                    <RootSiblingParent>
+                      <GestureHandlerRootView style={s.h100pct}>
+                        <TestCtrls />
+                        <Shell />
+                      </GestureHandlerRootView>
+                    </RootSiblingParent>
+                  </ThemeProvider>
+                </UnreadNotifsProvider>
+              </SelectedFeedProvider>
             </LoggedOutViewProvider>
           </React.Fragment>
         </Splash>

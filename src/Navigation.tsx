@@ -71,12 +71,13 @@ import {AppPasswords} from 'view/screens/AppPasswords'
 import {ModerationMutedAccounts} from 'view/screens/ModerationMutedAccounts'
 import {ModerationBlockedAccounts} from 'view/screens/ModerationBlockedAccounts'
 import {SavedFeeds} from 'view/screens/SavedFeeds'
-import {PreferencesHomeFeed} from 'view/screens/PreferencesHomeFeed'
+import {PreferencesFollowingFeed} from 'view/screens/PreferencesFollowingFeed'
 import {PreferencesThreads} from 'view/screens/PreferencesThreads'
 import {PreferencesExternalEmbeds} from '#/view/screens/PreferencesExternalEmbeds'
 import {createNativeStackNavigatorWithAuth} from './view/shell/createNativeStackNavigatorWithAuth'
 import {msg} from '@lingui/macro'
 import {i18n, MessageDescriptor} from '@lingui/core'
+import HashtagScreen from '#/screens/Hashtag'
 
 const navigationRef = createNavigationContainerRef<AllNavigatorParams>()
 
@@ -144,7 +145,6 @@ function commonScreens(Stack: typeof HomeTab, unreadCountLabel?: string) {
         getComponent={() => ProfileScreen}
         options={({route}) => ({
           title: bskyTitle(`@${route.params.name}`, unreadCountLabel),
-          animation: 'none',
         })}
       />
       <Stack.Screen
@@ -243,9 +243,12 @@ function commonScreens(Stack: typeof HomeTab, unreadCountLabel?: string) {
         options={{title: title(msg`Edit My Feeds`), requireAuth: true}}
       />
       <Stack.Screen
-        name="PreferencesHomeFeed"
-        getComponent={() => PreferencesHomeFeed}
-        options={{title: title(msg`Home Feed Preferences`), requireAuth: true}}
+        name="PreferencesFollowingFeed"
+        getComponent={() => PreferencesFollowingFeed}
+        options={{
+          title: title(msg`Following Feed Preferences`),
+          requireAuth: true,
+        }}
       />
       <Stack.Screen
         name="PreferencesThreads"
@@ -259,6 +262,11 @@ function commonScreens(Stack: typeof HomeTab, unreadCountLabel?: string) {
           title: title(msg`External Media Preferences`),
           requireAuth: true,
         }}
+      />
+      <Stack.Screen
+        name="Hashtag"
+        getComponent={() => HashtagScreen}
+        options={{title: title(msg`Hashtag`)}}
       />
     </>
   )
@@ -458,7 +466,8 @@ const FlatNavigator = () => {
  */
 
 const LINKING = {
-  prefixes: ['bsky://', 'https://bsky.app'],
+  // TODO figure out what we are going to use
+  prefixes: ['bsky://', 'bluesky://', 'https://bsky.app'],
 
   getPathFromState(state: State) {
     // find the current node in the navigation tree
@@ -477,6 +486,18 @@ const LINKING = {
 
   getStateFromPath(path: string) {
     const [name, params] = router.matchPath(path)
+
+    // Any time we receive a url that starts with `intent/` we want to ignore it here. It will be handled in the
+    // intent handler hook. We should check for the trailing slash, because if there isn't one then it isn't a valid
+    // intent
+    // On web, there is no route state that's created by default, so we should initialize it as the home route. On
+    // native, since the home tab and the home screen are defined as initial routes, we don't need to return a state
+    // since it will be created by react-navigation.
+    if (path.includes('intent/')) {
+      if (isNative) return
+      return buildStateObject('Flat', 'Home', params)
+    }
+
     if (isNative) {
       if (name === 'Search') {
         return buildStateObject('SearchTab', 'Search', params)
@@ -495,7 +516,8 @@ const LINKING = {
         },
       ])
     } else {
-      return buildStateObject('Flat', name, params)
+      const res = buildStateObject('Flat', name, params)
+      return res
     }
   },
 }
