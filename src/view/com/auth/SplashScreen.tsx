@@ -55,7 +55,7 @@ export const SplashScreen = ({
 
           <Text
             style={[a.text_md, a.font_semibold, t.atoms.text_contrast_medium]}>
-            <Trans>What's up?</Trans>
+            Crypto x Social
           </Text>
         </View>
         <View testID="signinOrCreateAccount">

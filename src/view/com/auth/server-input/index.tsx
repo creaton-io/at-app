@@ -86,8 +86,8 @@ export function ServerInputDialog({
             label="Preferences"
             values={fixedOption}
             onChange={setFixedOption}>
-            <ToggleButton.Button name={BSKY_SERVICE} label={_(msg`Bluesky`)}>
-              {_(msg`Bluesky`)}
+            <ToggleButton.Button name={BSKY_SERVICE} label={_(msg`Creaton`)}>
+              {_(msg`Creaton`)}
             </ToggleButton.Button>
             <ToggleButton.Button
               testID="customSelectBtn"
@@ -149,8 +149,8 @@ export function ServerInputDialog({
               ]}>
               <Trans>
                 Bluesky is an open network where you can choose your hosting
-                provider. Custom hosting is now available in beta for
-                developers.
+                provider. The Creaton node is used as default in the Creaton
+                app.
               </Trans>
             </P>
           </View>
