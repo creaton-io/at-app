@@ -1,21 +1,21 @@
 import React from 'react'
 import {View} from 'react-native'
-import {CenteredView, ScrollView} from '#/view/com/util/Views'
 
-import {atoms as a, useTheme, ThemeProvider} from '#/alf'
 import {useSetThemePrefs} from '#/state/shell'
+import {CenteredView, ScrollView} from '#/view/com/util/Views'
+import {atoms as a, ThemeProvider, useTheme} from '#/alf'
 import {Button} from '#/components/Button'
-
+import {Breakpoints} from './Breakpoints'
+import {Buttons} from './Buttons'
+import {Dialogs} from './Dialogs'
+import {Forms} from './Forms'
+import {Icons} from './Icons'
+import {Links} from './Links'
+import {Menus} from './Menus'
+import {Shadows} from './Shadows'
+import {Spacing} from './Spacing'
 import {Theming} from './Theming'
 import {Typography} from './Typography'
-import {Spacing} from './Spacing'
-import {Buttons} from './Buttons'
-import {Links} from './Links'
-import {Forms} from './Forms'
-import {Dialogs} from './Dialogs'
-import {Breakpoints} from './Breakpoints'
-import {Shadows} from './Shadows'
-import {Icons} from './Icons'
 
 export function Storybook() {
   const t = useTheme()
@@ -66,6 +66,7 @@ export function Storybook() {
             </Button>
           </View>
 
+          <Dialogs />
           <ThemeProvider theme="light">
             <Theming />
           </ThemeProvider>
@@ -84,6 +85,7 @@ export function Storybook() {
           <Links />
           <Forms />
           <Dialogs />
+          <Menus />
           <Breakpoints />
         </View>
       </CenteredView>

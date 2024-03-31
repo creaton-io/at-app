@@ -1,17 +1,21 @@
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
-import {usePalette} from 'lib/hooks/usePalette'
-import {useWebMediaQueries} from 'lib/hooks/useWebMediaQueries'
-import {HomeHeaderLayoutMobile} from './HomeHeaderLayoutMobile'
-import {Logo} from '#/view/icons/Logo'
-import {Link} from '../util/Link'
+import Animated from 'react-native-reanimated'
 import {
   FontAwesomeIcon,
   FontAwesomeIconStyle,
 } from '@fortawesome/react-native-fontawesome'
-import {useLingui} from '@lingui/react'
 import {msg} from '@lingui/macro'
+import {useLingui} from '@lingui/react'
+
 import {CogIcon} from '#/lib/icons'
+import {useShellLayout} from '#/state/shell/shell-layout'
+import {useMinimalShellMode} from 'lib/hooks/useMinimalShellMode'
+import {usePalette} from 'lib/hooks/usePalette'
+import {useWebMediaQueries} from 'lib/hooks/useWebMediaQueries'
+import {Logo} from '#/view/icons/Logo'
+import {Link} from '../util/Link'
+import {HomeHeaderLayoutMobile} from './HomeHeaderLayoutMobile'
 
 export function HomeHeaderLayout(props: {
   children: React.ReactNode
@@ -33,6 +37,8 @@ function HomeHeaderLayoutDesktopAndTablet({
   tabBarAnchor: JSX.Element | null | undefined
 }) {
   const pal = usePalette('default')
+  const {headerMinimalShellTransform} = useMinimalShellMode()
+  const {headerHeight} = useShellLayout()
   const {_} = useLingui()
 
   return (
@@ -60,9 +66,19 @@ function HomeHeaderLayoutDesktopAndTablet({
         </Link>
       </View>
       {tabBarAnchor}
-      <View style={[pal.view, pal.border, styles.bar, styles.tabBar]}>
+      <Animated.View
+        onLayout={e => {
+          headerHeight.value = e.nativeEvent.layout.height
+        }}
+        style={[
+          pal.view,
+          pal.border,
+          styles.bar,
+          styles.tabBar,
+          headerMinimalShellTransform,
+        ]}>
         {children}
-      </View>
+      </Animated.View>
     </>
   )
 }

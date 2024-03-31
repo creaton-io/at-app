@@ -1,30 +1,31 @@
 import React, {useImperativeHandle} from 'react'
-import {View, Dimensions, Keyboard, Pressable} from 'react-native'
+import {Dimensions, Pressable, View} from 'react-native'
+import Animated, {useAnimatedStyle} from 'react-native-reanimated'
+import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import BottomSheet, {
   BottomSheetBackdropProps,
   BottomSheetScrollView,
+  BottomSheetScrollViewMethods,
   BottomSheetTextInput,
   BottomSheetView,
   useBottomSheet,
   WINDOW_HEIGHT,
-} from '@gorhom/bottom-sheet'
-import {useSafeAreaInsets} from 'react-native-safe-area-context'
-import Animated, {useAnimatedStyle} from 'react-native-reanimated'
+} from '@discord/bottom-sheet/src'
 
-import {useTheme, atoms as a, flatten} from '#/alf'
-import {Portal} from '#/components/Portal'
-import {createInput} from '#/components/forms/TextField'
 import {logger} from '#/logger'
-import {useDialogStateContext} from '#/state/dialogs'
-
+import {useDialogStateControlContext} from '#/state/dialogs'
+import {isNative} from 'platform/detection'
+import {atoms as a, flatten, useTheme} from '#/alf'
+import {Context} from '#/components/Dialog/context'
 import {
-  DialogOuterProps,
   DialogControlProps,
   DialogInnerProps,
+  DialogOuterProps,
 } from '#/components/Dialog/types'
-import {Context} from '#/components/Dialog/context'
+import {createInput} from '#/components/forms/TextField'
+import {Portal} from '#/components/Portal'
 
-export {useDialogControl, useDialogContext} from '#/components/Dialog/context'
+export {useDialogContext, useDialogControl} from '#/components/Dialog/context'
 export * from '#/components/Dialog/types'
 // @ts-ignore
 export const Input = createInput(BottomSheetTextInput)
@@ -75,6 +76,7 @@ export function Outer({
   control,
   onClose,
   nativeOptions,
+  testID,
 }: React.PropsWithChildren<DialogOuterProps>) {
   const t = useTheme()
   const sheet = React.useRef<BottomSheet>(null)
@@ -82,7 +84,7 @@ export function Outer({
   const hasSnapPoints = !!sheetOptions.snapPoints
   const insets = useSafeAreaInsets()
   const closeCallback = React.useRef<() => void>()
-  const {openDialogs} = useDialogStateContext()
+  const {setDialogIsOpen} = useDialogStateControlContext()
 
   /*
    * Used to manage open/closed, but index is otherwise handled internally by `BottomSheet`
@@ -96,11 +98,11 @@ export function Outer({
 
   const open = React.useCallback<DialogControlProps['open']>(
     ({index} = {}) => {
-      openDialogs.current.add(control.id)
+      setDialogIsOpen(control.id, true)
       // can be set to any index of `snapPoints`, but `0` is the first i.e. "open"
       setOpenIndex(index || 0)
     },
-    [setOpenIndex, openDialogs, control.id],
+    [setOpenIndex, setDialogIsOpen, control.id],
   )
 
   const close = React.useCallback<DialogControlProps['close']>(cb => {
@@ -119,65 +121,66 @@ export function Outer({
     [open, close],
   )
 
-  const onChange = React.useCallback(
-    (index: number) => {
-      if (index === -1) {
-        Keyboard.dismiss()
-        try {
-          closeCallback.current?.()
-        } catch (e: any) {
-          logger.error(`Dialog closeCallback failed`, {
-            message: e.message,
-          })
-        } finally {
-          closeCallback.current = undefined
-        }
-
-        openDialogs.current.delete(control.id)
-        onClose?.()
-        setOpenIndex(-1)
-      }
-    },
-    [onClose, setOpenIndex, openDialogs, control.id],
-  )
+  const onCloseInner = React.useCallback(() => {
+    try {
+      closeCallback.current?.()
+    } catch (e: any) {
+      logger.error(`Dialog closeCallback failed`, {
+        message: e.message,
+      })
+    } finally {
+      closeCallback.current = undefined
+    }
+    setDialogIsOpen(control.id, false)
+    onClose?.()
+    setOpenIndex(-1)
+  }, [control.id, onClose, setDialogIsOpen])
 
   const context = React.useMemo(() => ({close}), [close])
 
   return (
     isOpen && (
       <Portal>
-        <BottomSheet
-          enableDynamicSizing={!hasSnapPoints}
-          enablePanDownToClose
-          keyboardBehavior="interactive"
-          android_keyboardInputMode="adjustResize"
-          keyboardBlurBehavior="restore"
-          topInset={insets.top}
-          {...sheetOptions}
-          snapPoints={sheetOptions.snapPoints || ['100%']}
-          ref={sheet}
-          index={openIndex}
-          backgroundStyle={{backgroundColor: 'transparent'}}
-          backdropComponent={Backdrop}
-          handleIndicatorStyle={{backgroundColor: t.palette.primary_500}}
-          handleStyle={{display: 'none'}}
-          onChange={onChange}>
-          <Context.Provider value={context}>
-            <View
-              style={[
-                a.absolute,
-                a.inset_0,
-                t.atoms.bg,
-                {
-                  borderTopLeftRadius: 40,
-                  borderTopRightRadius: 40,
-                  height: Dimensions.get('window').height * 2,
-                },
-              ]}
-            />
-            {children}
-          </Context.Provider>
-        </BottomSheet>
+        <View
+          // iOS
+          accessibilityViewIsModal
+          // Android
+          importantForAccessibility="yes"
+          style={[a.absolute, a.inset_0]}
+          testID={testID}>
+          <BottomSheet
+            enableDynamicSizing={!hasSnapPoints}
+            enablePanDownToClose
+            keyboardBehavior="interactive"
+            android_keyboardInputMode="adjustResize"
+            keyboardBlurBehavior="restore"
+            topInset={insets.top}
+            {...sheetOptions}
+            snapPoints={sheetOptions.snapPoints || ['100%']}
+            ref={sheet}
+            index={openIndex}
+            backgroundStyle={{backgroundColor: 'transparent'}}
+            backdropComponent={Backdrop}
+            handleIndicatorStyle={{backgroundColor: t.palette.primary_500}}
+            handleStyle={{display: 'none'}}
+            onClose={onCloseInner}>
+            <Context.Provider value={context}>
+              <View
+                style={[
+                  a.absolute,
+                  a.inset_0,
+                  t.atoms.bg,
+                  {
+                    borderTopLeftRadius: 40,
+                    borderTopRightRadius: 40,
+                    height: Dimensions.get('window').height * 2,
+                  },
+                ]}
+              />
+              {children}
+            </Context.Provider>
+          </BottomSheet>
+        </View>
       </Portal>
     )
   )
@@ -202,12 +205,14 @@ export function Inner({children, style}: DialogInnerProps) {
   )
 }
 
-export function ScrollableInner({children, style}: DialogInnerProps) {
+export const ScrollableInner = React.forwardRef<
+  BottomSheetScrollViewMethods,
+  DialogInnerProps
+>(function ScrollableInner({children, style}, ref) {
   const insets = useSafeAreaInsets()
   return (
     <BottomSheetScrollView
       keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="on-drag"
       style={[
         a.flex_1, // main diff is this
         a.p_xl,
@@ -218,24 +223,20 @@ export function ScrollableInner({children, style}: DialogInnerProps) {
           borderTopRightRadius: 40,
         },
         flatten(style),
-      ]}>
+      ]}
+      contentContainerStyle={isNative ? a.pb_4xl : undefined}
+      ref={ref}>
       {children}
       <View style={{height: insets.bottom + a.pt_5xl.paddingTop}} />
     </BottomSheetScrollView>
   )
-}
+})
 
 export function Handle() {
   const t = useTheme()
 
-  const onTouchStart = React.useCallback(() => {
-    Keyboard.dismiss()
-  }, [])
-
   return (
-    <View
-      style={[a.absolute, a.w_full, a.align_center, a.z_10, {height: 40}]}
-      onTouchStart={onTouchStart}>
+    <View style={[a.absolute, a.w_full, a.align_center, a.z_10, {height: 40}]}>
       <View
         style={[
           a.rounded_sm,
