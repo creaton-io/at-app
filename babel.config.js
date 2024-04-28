@@ -54,5 +54,6 @@ module.exports = function (api) {
         plugins: ['transform-remove-console'],
       },
     },
+    include: ['@coinbase/wallet-sdk'],
   }
 }

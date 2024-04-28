@@ -53,6 +53,7 @@
     "@atproto/api": "^0.12.3",
     "@bam.tech/react-native-image-resizer": "^3.0.4",
     "@braintree/sanitize-url": "^6.0.2",
+    "@coinbase/wallet-sdk": "^4.0.0-beta.12",
     "@discord/bottom-sheet": "https://github.com/bluesky-social/react-native-bottom-sheet.git#discord-fork-4.6.1",
     "@emoji-mart/react": "^1.1.1",
     "@expo/html-elements": "^0.4.2",
@@ -73,7 +74,7 @@
     "@react-native-picker/picker": "2.6.1",
     "@react-navigation/bottom-tabs": "^6.5.7",
     "@react-navigation/drawer": "^6.6.2",
-    "@react-navigation/native": "^6.1.6",
+    "@react-navigation/native": "6.1.7",
     "@react-navigation/native-stack": "^6.9.12",
     "@segment/analytics-next": "^1.51.3",
     "@segment/analytics-react": "^1.0.0-rc1",
@@ -82,7 +83,7 @@
     "@sentry/react-native": "5.5.0",
     "@tamagui/focus-scope": "^1.84.1",
     "@tanstack/query-async-storage-persister": "^5.25.0",
-    "@tanstack/react-query": "^5.8.1",
+    "@tanstack/react-query": "^5.29.2",
     "@tanstack/react-query-persist-client": "^5.25.0",
     "@tiptap/core": "^2.0.0-beta.220",
     "@tiptap/extension-document": "^2.0.0-beta.220",
@@ -98,6 +99,7 @@
     "@tiptap/suggestion": "^2.0.0-beta.220",
     "@types/invariant": "^2.2.37",
     "@types/node": "^18.16.2",
+    "@web3modal/wagmi": "^4.1.9",
     "@zxing/text-encoding": "^0.9.0",
     "array.prototype.findlast": "^1.2.3",
     "await-lock": "^2.2.2",
@@ -187,6 +189,8 @@
     "statsig-react-native-expo": "^4.6.1",
     "tippy.js": "^6.3.7",
     "tlds": "^1.234.0",
+    "viem": "2.x",
+    "wagmi": "^2.5.20",
     "zeego": "^1.6.2",
     "zod": "^3.20.2"
   },
@@ -262,7 +266,11 @@
   },
   "resolutions": {
     "@types/react": "^18",
-    "**/zeed-dom": "0.10.9"
+    "**/zeed-dom": "0.10.9",
+    "@coinbase/wallet-sdk": "npm:@coinbase/wallet-sdk@4.0.0-beta.12",
+    "metro-transform-worker": "0.80.4",
+    "metro-runtime": "0.80.4",
+    "**/@react-navigation/native": "6.1.7"
   },
   "jest": {
     "preset": "jest-expo/ios",

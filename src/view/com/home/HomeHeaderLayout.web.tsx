@@ -14,7 +14,6 @@ import {useShellLayout} from '#/state/shell/shell-layout'
 import {useMinimalShellMode} from 'lib/hooks/useMinimalShellMode'
 import {usePalette} from 'lib/hooks/usePalette'
 import {useWebMediaQueries} from 'lib/hooks/useWebMediaQueries'
-import {Logo} from '#/view/icons/Logo'
 import {Link} from '../util/Link'
 import {HomeHeaderLayoutMobile} from './HomeHeaderLayoutMobile'
 
@@ -58,7 +57,8 @@ function HomeHeaderLayoutDesktopAndTablet({
               style={pal.textLight as FontAwesomeIconStyle}
             />
           </Link>
-          <Logo width={28} />
+
+          <w3m-button />
           <Link
             href="/settings/saved-feeds"
             hitSlop={10}

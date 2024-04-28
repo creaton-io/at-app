@@ -9,6 +9,10 @@ import {
 import {FontAwesomeIcon} from '@fortawesome/react-native-fontawesome'
 import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
+import {verifyMessage} from '@wagmi/core'
+import {hexToString} from 'viem'
+import {baseSepolia, mainnet, sepolia} from 'viem/chains'
+import {createConfig, http, useSignMessage} from 'wagmi'
 
 import {useGate} from '#/lib/statsig/statsig'
 import {logger} from '#/logger'
@@ -28,6 +32,7 @@ import {ProfileMenu} from '#/view/com/profile/ProfileMenu'
 import * as Toast from '#/view/com/util/Toast'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import {useGlobalDialogsControlContext} from '#/components/dialogs/Context'
 import {Check_Stroke2_Corner0_Rounded as Check} from '#/components/icons/Check'
 import {PlusLarge_Stroke2_Corner0_Rounded as Plus} from '#/components/icons/Plus'
 import * as Prompt from '#/components/Prompt'
@@ -71,6 +76,7 @@ let ProfileHeaderStandard = ({
   const [_queueBlock, queueUnblock] = useProfileBlockMutationQueue(profile)
   const unblockPromptControl = Prompt.usePromptControl()
   const requireAuth = useRequireAuth()
+  const {signMessageAsync} = useSignMessage()
 
   const onPressEditProfile = React.useCallback(() => {
     track('ProfileHeader:EditProfileButtonClicked')
@@ -143,10 +149,65 @@ let ProfileHeaderStandard = ({
     }
   }, [_, queueUnblock, track])
 
+  const onPressLinkCrypto = React.useCallback(async () => {
+    // track('ProfileHeader:ReportAccountButtonClicked')
+    try {
+      const signed = await signMessageAsync({
+        message: 'Linking Creaton DID to crypto address',
+      })
+
+      console.log('signed ', signed)
+
+      const config = createConfig({
+        chains: [mainnet, sepolia, baseSepolia],
+        transports: {
+          [mainnet.id]: http(),
+          [sepolia.id]: http(),
+          [baseSepolia.id]: http(),
+        },
+      })
+
+      const verified = await verifyMessage(config, {
+        address: '0x9e3Cc529cD54ABB20556fB0d343FD3C8fC58327B',
+        message: hexToString(
+          '0x4c696e6b696e672043726561746f6e2044494420746f2063727970746f2061646472657373',
+        ),
+        signature: signed,
+      })
+
+      console.log(
+        'verified',
+        verified +
+          hexToString(
+            '0x4c696e6b696e672043726561746f6e2044494420746f2063727970746f2061646472657373',
+          ),
+      )
+
+      console.log('signature', hexToString(signed))
+
+      await fetch('http://localhost:3000/jwt', {
+        method: 'POST',
+        body: JSON.stringify({
+          signed: signed,
+          accessJwt: currentAccount ? currentAccount.accessJwt : null,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      console.log(signed)
+    } catch (error) {
+      console.error('Failed to link crypto address', error)
+    }
+    // send signed + jwt to server, both should be enough proof
+  }, [signMessageAsync, currentAccount])
+
   const isMe = React.useMemo(
     () => currentAccount?.did === profile.did,
     [currentAccount, profile],
   )
+
+  const {subscriptionSettingsDialogControl} = useGlobalDialogsControlContext()
 
   return (
     <ProfileHeaderShell
@@ -159,18 +220,47 @@ let ProfileHeaderStandard = ({
           style={[a.flex_row, a.justify_end, a.gap_sm, a.pb_sm]}
           pointerEvents="box-none">
           {isMe ? (
-            <Button
-              testID="profileHeaderEditProfileButton"
-              size="small"
-              color="secondary"
-              variant="solid"
-              onPress={onPressEditProfile}
-              label={_(msg`Edit profile`)}
-              style={a.rounded_full}>
-              <ButtonText>
-                <Trans>Edit Profile</Trans>
-              </ButtonText>
-            </Button>
+            <>
+              <Button
+                testID="profileHeaderEditProfileButton"
+                size="small"
+                color="secondary"
+                variant="solid"
+                onPress={onPressEditProfile}
+                label={_(msg`Edit profile`)}
+                style={a.rounded_full}>
+                <ButtonText>
+                  <Trans>Edit Profile</Trans>
+                </ButtonText>
+              </Button>
+              <Button
+                testID="profileHeaderLinkCryptoButton"
+                size="small"
+                color="secondary"
+                variant="solid"
+                onPress={onPressLinkCrypto}
+                label={_(msg`Link Crypto Wallet`)}
+                style={a.rounded_full}>
+                <ButtonText>
+                  <Trans>Link Crypto Wallet</Trans>
+                </ButtonText>
+              </Button>
+              <Button
+                testID="profileHeaderLinkCryptoButton"
+                size="small"
+                color="secondary"
+                variant="solid"
+                onPress={() => {
+                  console.log('Attempting to open dialog')
+                  subscriptionSettingsDialogControl.open()
+                }}
+                label={_(msg`Add Subscriptions`)}
+                style={a.rounded_full}>
+                <ButtonText>
+                  <Trans>Add Subscriptions</Trans>
+                </ButtonText>
+              </Button>
+            </>
           ) : profile.viewer?.blocking ? (
             profile.viewer?.blockingByList ? null : (
               <Button
@@ -233,6 +323,32 @@ let ProfileHeaderStandard = ({
                     <Trans>Following</Trans>
                   ) : (
                     <Trans>Follow</Trans>
+                  )}
+                </ButtonText>
+              </Button>
+              <Button
+                testID={profile.viewer?.following ? 'unfollowBtn' : 'followBtn'}
+                size="small"
+                color={profile.viewer?.following ? 'secondary' : 'primary'}
+                variant="solid"
+                label={
+                  profile.viewer?.following
+                    ? _(msg`Unfollow ${profile.handle}`)
+                    : _(msg`Follow ${profile.handle}`)
+                }
+                onPress={
+                  profile.viewer?.following ? onPressUnfollow : onPressFollow
+                }
+                style={[a.rounded_full, a.gap_xs]}>
+                <ButtonIcon
+                  position="left"
+                  icon={profile.viewer?.following ? Check : Plus}
+                />
+                <ButtonText>
+                  {profile.viewer?.following ? (
+                    <Trans>Subscribed</Trans>
+                  ) : (
+                    <Trans>Subscribe</Trans>
                   )}
                 </ButtonText>
               </Button>

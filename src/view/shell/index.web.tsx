@@ -12,6 +12,7 @@ import {NavigationProp} from 'lib/routes/types'
 import {colors, s} from 'lib/styles'
 import {MutedWordsDialog} from '#/components/dialogs/MutedWords'
 import {SigninDialog} from '#/components/dialogs/Signin'
+import {SubscriptionSettingsDialog} from '#/components/dialogs/SubscriptionSettings'
 import {Outlet as PortalOutlet} from '#/components/Portal'
 import {useWebMediaQueries} from '../../lib/hooks/useWebMediaQueries'
 import {FlatNavigator, RoutesContainer} from '../../Navigation'
@@ -46,6 +47,7 @@ function ShellInner() {
       <Composer winHeight={0} />
       <ModalsContainer />
       <MutedWordsDialog />
+      <SubscriptionSettingsDialog />
       <SigninDialog />
       <Lightbox />
       <PortalOutlet />
