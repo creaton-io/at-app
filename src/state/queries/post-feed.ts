@@ -15,6 +15,7 @@ import {
 } from '@tanstack/react-query'
 
 import {HomeFeedAPI} from '#/lib/api/feed/home'
+import {aggregateUserInterests} from '#/lib/api/feed/utils'
 import {moderatePost_wrapped as moderatePost} from '#/lib/moderatePost_wrapped'
 import {logger} from '#/logger'
 import {STALE} from '#/state/queries'
@@ -31,7 +32,8 @@ import {FeedTuner, FeedTunerFn, NoopFeedTuner} from 'lib/api/feed-manip'
 import {BSKY_FEED_OWNER_DIDS} from 'lib/constants'
 import {KnownError} from '#/view/com/posts/FeedErrorMessage'
 import {useFeedTuners} from '../preferences/feed-tuners'
-import {useModerationOpts} from './preferences'
+import {useModerationOpts} from '../preferences/moderation-opts'
+import {usePreferencesQuery} from './preferences'
 import {embedViewRecordToPostView, getEmbeddedPost} from './util'
 
 type ActorDid = string
@@ -68,10 +70,12 @@ export interface FeedPostSliceItem {
   post: AppBskyFeedDefs.PostView
   record: AppBskyFeedPost.Record
   reason?: AppBskyFeedDefs.ReasonRepost | ReasonFeedSource
+  feedContext: string | undefined
   moderation: ModerationDecision
 }
 
 export interface FeedPostSlice {
+  _isFeedPostSlice: boolean
   _reactKey: string
   rootUri: string
   isThread: boolean
@@ -102,8 +106,11 @@ export function usePostFeedQuery(
 ) {
   const feedTuners = useFeedTuners(feedDesc)
   const moderationOpts = useModerationOpts()
+  const {data: preferences} = usePreferencesQuery()
+  const enabled =
+    opts?.enabled !== false && Boolean(moderationOpts) && Boolean(preferences)
+  const userInterests = aggregateUserInterests(preferences)
   const {getAgent} = useAgent()
-  const enabled = opts?.enabled !== false && Boolean(moderationOpts)
   const lastRun = useRef<{
     data: InfiniteData<FeedPageUnselected>
     args: typeof selectArgs
@@ -141,6 +148,7 @@ export function usePostFeedQuery(
               feedDesc,
               feedParams: params || {},
               feedTuners,
+              userInterests, // Not in the query key because they don't change.
               getAgent,
             }),
             cursor: undefined,
@@ -270,6 +278,7 @@ export function usePostFeedQuery(
 
                   return {
                     _reactKey: slice._reactKey,
+                    _isFeedPostSlice: true,
                     rootUri: slice.rootItem.post.uri,
                     isThread:
                       slice.items.length > 1 &&
@@ -294,6 +303,7 @@ export function usePostFeedQuery(
                               i === 0 && slice.source
                                 ? slice.source
                                 : item.reason,
+                            feedContext: item.feedContext,
                             moderation: moderations[i],
                           }
                         }
@@ -371,11 +381,13 @@ function createApi({
   feedDesc,
   feedParams,
   feedTuners,
+  userInterests,
   getAgent,
 }: {
   feedDesc: FeedDescriptor
   feedParams: FeedParams
   feedTuners: FeedTunerFn[]
+  userInterests?: string
   getAgent: () => BskyAgent
 }) {
   if (feedDesc === 'home') {
@@ -384,9 +396,10 @@ function createApi({
         getAgent,
         feedParams,
         feedTuners,
+        userInterests,
       })
     } else {
-      return new HomeFeedAPI({getAgent})
+      return new HomeFeedAPI({getAgent, userInterests})
     }
   } else if (feedDesc === 'following') {
     return new FollowingFeedAPI({getAgent})
@@ -401,6 +414,7 @@ function createApi({
     return new CustomFeedAPI({
       getAgent,
       feedParams: {feed},
+      userInterests,
     })
   } else if (feedDesc.startsWith('list')) {
     const [_, list] = feedDesc.split('|')
@@ -496,4 +510,10 @@ export function resetProfilePostsQueries(
         ),
     })
   }, timeout)
+}
+
+export function isFeedPostSlice(v: any): v is FeedPostSlice {
+  return (
+    v && typeof v === 'object' && '_isFeedPostSlice' in v && v._isFeedPostSlice
+  )
 }
