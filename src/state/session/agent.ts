@@ -67,12 +67,12 @@ export async function createAgentAndLogin(
   {
     service,
     identifier,
-    password,
+    siweSignature,
     authFactorToken,
   }: {
     service: string
     identifier: string
-    password: string
+    siweSignature: string
     authFactorToken?: string
   },
   onSessionChange: (
@@ -82,7 +82,7 @@ export async function createAgentAndLogin(
   ) => void,
 ) {
   const agent = new BskyAppAgent({service})
-  await agent.login({identifier, password, authFactorToken})
+  await agent.login({identifier, siweSignature, authFactorToken})
 
   const account = agentToSessionAccountOrThrow(agent)
   const gates = tryFetchGates(account.did, 'prefer-fresh-gates')
@@ -94,7 +94,7 @@ export async function createAgentAndCreateAccount(
   {
     service,
     email,
-    password,
+    ethAddress,
     handle,
     birthDate,
     inviteCode,
@@ -103,7 +103,7 @@ export async function createAgentAndCreateAccount(
   }: {
     service: string
     email: string
-    password: string
+    ethAddress: string
     handle: string
     birthDate: Date
     inviteCode?: string
@@ -119,7 +119,7 @@ export async function createAgentAndCreateAccount(
   const agent = new BskyAppAgent({service})
   await agent.createAccount({
     email,
-    password,
+    ethAddress,
     handle,
     inviteCode,
     verificationPhone,

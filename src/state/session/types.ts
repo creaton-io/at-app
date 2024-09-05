@@ -13,7 +13,7 @@ export type SessionApiContext = {
   createAccount: (props: {
     service: string
     email: string
-    password: string
+    ethAddress: string
     handle: string
     birthDate: Date
     inviteCode?: string
@@ -24,7 +24,7 @@ export type SessionApiContext = {
     props: {
       service: string
       identifier: string
-      password: string
+      ethAddress: string
       authFactorToken?: string | undefined
     },
     logContext: LogEvents['account:loggedIn']['logContext'],

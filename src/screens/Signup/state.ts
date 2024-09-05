@@ -40,7 +40,7 @@ export type SignupState = {
   userDomain: string
   dateOfBirth: Date
   email: string
-  password: string
+  ethAddress: string
   inviteCode: string
   handle: string
 
@@ -58,7 +58,7 @@ export type SignupAction =
   | {type: 'setServiceUrl'; value: string}
   | {type: 'setServiceDescription'; value: ServiceDescription | undefined}
   | {type: 'setEmail'; value: string}
-  | {type: 'setPassword'; value: string}
+  | {type: 'setEthAddress'; value: string}
   | {type: 'setDateOfBirth'; value: Date}
   | {type: 'setInviteCode'; value: string}
   | {type: 'setHandle'; value: string}
@@ -75,7 +75,7 @@ export const initialState: SignupState = {
   userDomain: '',
   dateOfBirth: DEFAULT_DATE,
   email: '',
-  password: '',
+  ethAddress: '',
   handle: '',
   inviteCode: '',
 
@@ -134,8 +134,8 @@ export function reducer(s: SignupState, a: SignupAction): SignupState {
       next.email = a.value
       break
     }
-    case 'setPassword': {
-      next.password = a.value
+    case 'setEthAddress': {
+      next.ethAddress = a.value
       break
     }
     case 'setDateOfBirth': {
@@ -203,11 +203,11 @@ export function useSubmitSignup() {
           value: _(msg`Your email appears to be invalid.`),
         })
       }
-      if (!state.password) {
+      if (!state.ethAddress) {
         dispatch({type: 'setStep', value: SignupStep.INFO})
         return dispatch({
           type: 'setError',
-          value: _(msg`Please choose your password.`),
+          value: _(msg`Please put in your Ethereum address.`),
         })
       }
       if (!state.handle) {
@@ -239,7 +239,7 @@ export function useSubmitSignup() {
           service: state.serviceUrl,
           email: state.email,
           handle: createFullHandle(state.handle, state.userDomain),
-          password: state.password,
+          password: state.ethAddress,
           birthDate: state.dateOfBirth,
           inviteCode: state.inviteCode.trim(),
           verificationCode: state.pendingSubmit?.verificationCode,

@@ -15,8 +15,8 @@ import {FormError} from '#/components/forms/FormError'
 import {HostingProvider} from '#/components/forms/HostingProvider'
 import * as TextField from '#/components/forms/TextField'
 import {Envelope_Stroke2_Corner0_Rounded as Envelope} from '#/components/icons/Envelope'
-import {Lock_Stroke2_Corner0_Rounded as Lock} from '#/components/icons/Lock'
 import {Ticket_Stroke2_Corner0_Rounded as Ticket} from '#/components/icons/Ticket'
+import {Zap_Stroke2_Corner0_Rounded as Zap} from '#/components/icons/Zap'
 import {Loader} from '#/components/Loader'
 import {BackNextButtons} from '../BackNextButtons'
 
@@ -46,12 +46,12 @@ export function StepInfo({
 
   const inviteCodeValueRef = useRef<string>(state.inviteCode)
   const emailValueRef = useRef<string>(state.email)
-  const passwordValueRef = useRef<string>(state.password)
+  const ethAddressValueRef = useRef<string>(state.ethAddress)
 
   const onNextPress = React.useCallback(async () => {
     const inviteCode = inviteCodeValueRef.current
     const email = emailValueRef.current
-    const password = passwordValueRef.current
+    const ethAddress = ethAddressValueRef.current
 
     if (!is13(state.dateOfBirth)) {
       return
@@ -75,16 +75,16 @@ export function StepInfo({
         value: _(msg`Your email appears to be invalid.`),
       })
     }
-    if (!password) {
+    if (!ethAddress) {
       return dispatch({
         type: 'setError',
-        value: _(msg`Please choose your password.`),
+        value: _(msg`Please put in an Ethereum Address.`),
       })
     }
 
     dispatch({type: 'setInviteCode', value: inviteCode})
     dispatch({type: 'setEmail', value: email})
-    dispatch({type: 'setPassword', value: password})
+    dispatch({type: 'setEthAddress', value: ethAddress})
     dispatch({type: 'next'})
     logEvent('signup:nextPressed', {
       activeStep: state.activeStep,
@@ -159,19 +159,18 @@ export function StepInfo({
             </View>
             <View>
               <TextField.LabelText>
-                <Trans>Password</Trans>
+                <Trans>Ethereum Address</Trans>
               </TextField.LabelText>
               <TextField.Root>
-                <TextField.Icon icon={Lock} />
+                <TextField.Icon icon={Zap} />
                 <TextField.Input
-                  testID="passwordInput"
+                  testID="ethAddressInput"
                   onChangeText={value => {
-                    passwordValueRef.current = value
+                    ethAddressValueRef.current = value
                   }}
-                  label={_(msg`Choose your password`)}
-                  defaultValue={state.password}
-                  secureTextEntry
-                  autoComplete="new-password"
+                  label={_(msg`Put in your Ethereum Address`)}
+                  defaultValue={state.ethAddress}
+                  autoComplete="additional-name"
                 />
               </TextField.Root>
             </View>

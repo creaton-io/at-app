@@ -28,8 +28,8 @@ import {FormError} from '#/components/forms/FormError'
 import {HostingProvider} from '#/components/forms/HostingProvider'
 import * as TextField from '#/components/forms/TextField'
 import {At_Stroke2_Corner0_Rounded as At} from '#/components/icons/At'
-import {Lock_Stroke2_Corner0_Rounded as Lock} from '#/components/icons/Lock'
 import {Ticket_Stroke2_Corner0_Rounded as Ticket} from '#/components/icons/Ticket'
+import {Zap_Stroke2_Corner0_Rounded as Zap} from '#/components/icons/Zap'
 import {Loader} from '#/components/Loader'
 import {Text} from '#/components/Typography'
 import {FormContainer} from './FormContainer'
@@ -64,9 +64,9 @@ export const LoginForm = ({
   const [isAuthFactorTokenNeeded, setIsAuthFactorTokenNeeded] =
     useState<boolean>(false)
   const identifierValueRef = useRef<string>(initialHandle || '')
-  const passwordValueRef = useRef<string>('')
+  const siweValueRef = useRef<string>('')
   const authFactorTokenValueRef = useRef<string>('')
-  const passwordRef = useRef<TextInput>(null)
+  const siweRef = useRef<TextInput>(null)
   const {_} = useLingui()
   const {login} = useSessionApi()
   const requestNotificationsPermission = useRequestNotificationsPermission()
@@ -86,7 +86,7 @@ export const LoginForm = ({
     setIsProcessing(true)
 
     const identifier = identifierValueRef.current.toLowerCase().trim()
-    const password = passwordValueRef.current
+    const siwe = siweValueRef.current
     const authFactorToken = authFactorTokenValueRef.current
 
     try {
@@ -117,7 +117,7 @@ export const LoginForm = ({
         {
           service: serviceUrl,
           identifier: fullIdent,
-          password,
+          siwe,
           authFactorToken: authFactorToken.trim(),
         },
         'LoginForm',
@@ -161,7 +161,7 @@ export const LoginForm = ({
     if (
       !!serviceDescription &&
       !!identifierValueRef.current &&
-      !!passwordValueRef.current
+      !!siweValueRef.current
     ) {
       if (!isReady) {
         setIsReady(true)
@@ -207,7 +207,7 @@ export const LoginForm = ({
                 checkIsReady()
               }}
               onSubmitEditing={() => {
-                passwordRef.current?.focus()
+                siweRef.current?.focus()
               }}
               blurOnSubmit={false} // prevents flickering due to onSubmitEditing going to next field
               editable={!isProcessing}
@@ -218,27 +218,27 @@ export const LoginForm = ({
           </TextField.Root>
 
           <TextField.Root>
-            <TextField.Icon icon={Lock} />
+            <TextField.Icon icon={Zap} />
             <TextField.Input
-              testID="loginPasswordInput"
-              inputRef={passwordRef}
-              label={_(msg`Password`)}
+              testID="loginSIWEInput"
+              inputRef={siweRef}
+              label={_(msg`Ethereum Address`)}
               autoCapitalize="none"
               autoCorrect={false}
-              autoComplete="password"
+              autoComplete="additional-name"
               returnKeyType="done"
               enablesReturnKeyAutomatically={true}
-              secureTextEntry={true}
-              textContentType="password"
+              secureTextEntry={false}
+              textContentType="nickname"
               clearButtonMode="while-editing"
               onChangeText={v => {
-                passwordValueRef.current = v
+                siweValueRef.current = v
                 checkIsReady()
               }}
               onSubmitEditing={onPressNext}
               blurOnSubmit={false} // HACK: https://github.com/facebook/react-native/issues/21911#issuecomment-558343069 Keyboard blur behavior is now handled in onSubmitEditing
               editable={!isProcessing}
-              accessibilityHint={_(msg`Input your password`)}
+              accessibilityHint={_(msg`Input your Ethereum Address`)}
             />
             <Button
               testID="forgotPasswordButton"
