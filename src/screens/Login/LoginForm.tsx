@@ -45,7 +45,7 @@ export const LoginForm = ({
   setServiceUrl,
   onPressRetryConnect,
   onPressBack,
-  onPressForgotPassword,
+  onPressSignSIWE,
 }: {
   error: string
   serviceUrl: string
@@ -55,7 +55,7 @@ export const LoginForm = ({
   setServiceUrl: (v: string) => void
   onPressRetryConnect: () => void
   onPressBack: () => void
-  onPressForgotPassword: () => void
+  onPressSignSIWE: () => void
 }) => {
   const {track} = useAnalytics()
   const t = useTheme()
@@ -64,9 +64,9 @@ export const LoginForm = ({
   const [isAuthFactorTokenNeeded, setIsAuthFactorTokenNeeded] =
     useState<boolean>(false)
   const identifierValueRef = useRef<string>(initialHandle || '')
-  const siweValueRef = useRef<string>('')
+  const siweSignatureValueRef = useRef<string>('')
   const authFactorTokenValueRef = useRef<string>('')
-  const siweRef = useRef<TextInput>(null)
+  const siweSignatureRef = useRef<TextInput>(null)
   const {_} = useLingui()
   const {login} = useSessionApi()
   const requestNotificationsPermission = useRequestNotificationsPermission()
@@ -86,7 +86,7 @@ export const LoginForm = ({
     setIsProcessing(true)
 
     const identifier = identifierValueRef.current.toLowerCase().trim()
-    const siwe = siweValueRef.current
+    const siweSignature = siweSignatureValueRef.current
     const authFactorToken = authFactorTokenValueRef.current
 
     try {
@@ -117,7 +117,7 @@ export const LoginForm = ({
         {
           service: serviceUrl,
           identifier: fullIdent,
-          siwe,
+          siweSignature,
           authFactorToken: authFactorToken.trim(),
         },
         'LoginForm',
@@ -161,7 +161,7 @@ export const LoginForm = ({
     if (
       !!serviceDescription &&
       !!identifierValueRef.current &&
-      !!siweValueRef.current
+      !!siweSignatureValueRef.current
     ) {
       if (!isReady) {
         setIsReady(true)
@@ -207,7 +207,7 @@ export const LoginForm = ({
                 checkIsReady()
               }}
               onSubmitEditing={() => {
-                siweRef.current?.focus()
+                siweSignatureRef.current?.focus()
               }}
               blurOnSubmit={false} // prevents flickering due to onSubmitEditing going to next field
               editable={!isProcessing}
@@ -221,7 +221,7 @@ export const LoginForm = ({
             <TextField.Icon icon={Zap} />
             <TextField.Input
               testID="loginSIWEInput"
-              inputRef={siweRef}
+              inputRef={siweSignatureRef}
               label={_(msg`Ethereum Address`)}
               autoCapitalize="none"
               autoCorrect={false}
@@ -232,7 +232,7 @@ export const LoginForm = ({
               textContentType="nickname"
               clearButtonMode="while-editing"
               onChangeText={v => {
-                siweValueRef.current = v
+                siweSignatureValueRef.current = v
                 checkIsReady()
               }}
               onSubmitEditing={onPressNext}
@@ -241,10 +241,10 @@ export const LoginForm = ({
               accessibilityHint={_(msg`Input your Ethereum Address`)}
             />
             <Button
-              testID="forgotPasswordButton"
-              onPress={onPressForgotPassword}
-              label={_(msg`Forgot password?`)}
-              accessibilityHint={_(msg`Opens password reset form`)}
+              testID="signSIWEButton"
+              onPress={onPressSignSIWE}
+              label={_(msg`Sign SIWE`)}
+              accessibilityHint={_(msg`Sign SIWE to log in`)}
               variant="solid"
               color="secondary"
               style={[
@@ -254,7 +254,7 @@ export const LoginForm = ({
                 a.z_10,
               ]}>
               <ButtonText>
-                <Trans>Forgot?</Trans>
+                <Trans>Sign SIWE</Trans>
               </ButtonText>
             </Button>
           </TextField.Root>

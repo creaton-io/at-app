@@ -4,7 +4,7 @@ import {LayoutAnimationConfig} from 'react-native-reanimated'
 import {msg} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 
-import {useAnalytics} from '#/lib/analytics/analytics'
+//import {useAnalytics} from '#/lib/analytics/analytics'
 import {DEFAULT_SERVICE} from '#/lib/constants'
 import {logger} from '#/logger'
 import {useServiceQuery} from '#/state/queries/service'
@@ -31,7 +31,7 @@ export const Login = ({onPressBack}: {onPressBack: () => void}) => {
   const {_} = useLingui()
 
   const {accounts} = useSession()
-  const {track} = useAnalytics()
+  //const {track} = useAnalytics()
   const {requestedAccountSwitchTo} = useLoggedOutView()
   const requestedAccount = accounts.find(
     acc => acc.did === requestedAccountSwitchTo,
@@ -86,9 +86,14 @@ export const Login = ({onPressBack}: {onPressBack: () => void}) => {
     }
   }, [serviceError, serviceUrl, _])
 
-  const onPressForgotPassword = () => {
-    track('Signin:PressedForgotPassword')
-    setCurrentForm(Forms.ForgotPassword)
+  // const onPressForgotPassword = () => {
+  //   track('Signin:PressedForgotPassword')
+  //   setCurrentForm(Forms.ForgotPassword)
+  // }
+
+  const onPressSignSIWE = () => {
+    //track('Signin:PressedSignSIWE')
+    //setCurrentForm(Forms.ForgotPassword)
   }
 
   let content = null
@@ -110,7 +115,7 @@ export const Login = ({onPressBack}: {onPressBack: () => void}) => {
           onPressBack={() =>
             accounts.length ? gotoForm(Forms.ChooseAccount) : onPressBack()
           }
-          onPressForgotPassword={onPressForgotPassword}
+          onPressSignSIWE={onPressSignSIWE}
           onPressRetryConnect={refetchService}
         />
       )

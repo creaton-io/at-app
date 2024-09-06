@@ -5,7 +5,7 @@ import {networkRetry} from '#/lib/async/retry'
 import {
   DISCOVER_SAVED_FEED,
   IS_PROD_SERVICE,
-  PUBLIC_BSKY_SERVICE,
+  PUBLIC_CREATON_SERVICE,
   TIMELINE_SAVED_FEED,
 } from '#/lib/constants'
 import {tryFetchGates} from '#/lib/statsig/statsig'
@@ -23,7 +23,7 @@ import {isSessionExpired, isSignupQueued} from './util'
 
 export function createPublicAgent() {
   configureModerationForGuest() // Side effect but only relevant for tests
-  return new BskyAppAgent({service: PUBLIC_BSKY_SERVICE})
+  return new BskyAppAgent({service: PUBLIC_CREATON_SERVICE})
 }
 
 export async function createAgentAndResume(

@@ -4,7 +4,7 @@ import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 
 import * as persisted from '#/state/persisted'
-import {BSKY_SERVICE} from 'lib/constants'
+import {CREATON_SERVICE} from 'lib/constants'
 import {atoms as a, useBreakpoints, useTheme} from '#/alf'
 import {Button, ButtonText} from '#/components/Button'
 import * as Dialog from '#/components/Dialog'
@@ -26,7 +26,7 @@ export function ServerInputDialog({
   const [pdsAddressHistory, setPdsAddressHistory] = React.useState<string[]>(
     persisted.get('pdsAddressHistory') || [],
   )
-  const [fixedOption, setFixedOption] = React.useState([BSKY_SERVICE])
+  const [fixedOption, setFixedOption] = React.useState([CREATON_SERVICE])
   const [customAddress, setCustomAddress] = React.useState('')
 
   const onClose = React.useCallback(() => {
@@ -86,9 +86,9 @@ export function ServerInputDialog({
             label="Preferences"
             values={fixedOption}
             onChange={setFixedOption}>
-            <ToggleButton.Button name={BSKY_SERVICE} label={_(msg`Bluesky`)}>
+            <ToggleButton.Button name={CREATON_SERVICE} label={_(msg`Creaton`)}>
               <ToggleButton.ButtonText>
-                {_(msg`Bluesky`)}
+                {_(msg`Creaton`)}
               </ToggleButton.ButtonText>
             </ToggleButton.Button>
             <ToggleButton.Button

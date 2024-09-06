@@ -24,7 +24,7 @@ export type SessionApiContext = {
     props: {
       service: string
       identifier: string
-      ethAddress: string
+      siweSignature: string
       authFactorToken?: string | undefined
     },
     logContext: LogEvents['account:loggedIn']['logContext'],
