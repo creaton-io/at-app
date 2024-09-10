@@ -29,11 +29,10 @@ import {HostingProvider} from '#/components/forms/HostingProvider'
 import * as TextField from '#/components/forms/TextField'
 import {At_Stroke2_Corner0_Rounded as At} from '#/components/icons/At'
 import {Ticket_Stroke2_Corner0_Rounded as Ticket} from '#/components/icons/Ticket'
-import {Zap_Stroke2_Corner0_Rounded as Zap} from '#/components/icons/Zap'
 import {Loader} from '#/components/Loader'
 import {Text} from '#/components/Typography'
 import {FormContainer} from './FormContainer'
-
+import {WalletComponents} from './LoginWallet'
 type ServiceDescription = ComAtprotoServerDescribeServer.OutputSchema
 
 export const LoginForm = ({
@@ -55,7 +54,7 @@ export const LoginForm = ({
   setServiceUrl: (v: string) => void
   onPressRetryConnect: () => void
   onPressBack: () => void
-  onPressSignSIWE: () => void
+  onPressSignSIWE: () => Promise<string>
 }) => {
   const {track} = useAnalytics()
   const t = useTheme()
@@ -175,6 +174,7 @@ export const LoginForm = ({
 
   return (
     <FormContainer testID="loginForm" titleText={<Trans>Sign in</Trans>}>
+      <WalletComponents />
       <View>
         <TextField.LabelText>
           <Trans>Hosting provider</Trans>
@@ -215,48 +215,6 @@ export const LoginForm = ({
                 msg`Input the username or email address you used at signup`,
               )}
             />
-          </TextField.Root>
-
-          <TextField.Root>
-            <TextField.Icon icon={Zap} />
-            <TextField.Input
-              testID="loginSIWEInput"
-              inputRef={siweSignatureRef}
-              label={_(msg`Ethereum Address`)}
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="additional-name"
-              returnKeyType="done"
-              enablesReturnKeyAutomatically={true}
-              secureTextEntry={false}
-              textContentType="nickname"
-              clearButtonMode="while-editing"
-              onChangeText={v => {
-                siweSignatureValueRef.current = v
-                checkIsReady()
-              }}
-              onSubmitEditing={onPressNext}
-              blurOnSubmit={false} // HACK: https://github.com/facebook/react-native/issues/21911#issuecomment-558343069 Keyboard blur behavior is now handled in onSubmitEditing
-              editable={!isProcessing}
-              accessibilityHint={_(msg`Input your Ethereum Address`)}
-            />
-            <Button
-              testID="signSIWEButton"
-              onPress={onPressSignSIWE}
-              label={_(msg`Sign SIWE`)}
-              accessibilityHint={_(msg`Sign SIWE to log in`)}
-              variant="solid"
-              color="secondary"
-              style={[
-                a.rounded_sm,
-                // t.atoms.bg_contrast_100,
-                {marginLeft: 'auto', left: 6, padding: 6},
-                a.z_10,
-              ]}>
-              <ButtonText>
-                <Trans>Sign SIWE</Trans>
-              </ButtonText>
-            </Button>
           </TextField.Root>
         </View>
       </View>
@@ -339,7 +297,32 @@ export const LoginForm = ({
             </ButtonText>
             {isProcessing && <ButtonIcon icon={Loader} />}
           </Button>
-        ) : undefined}
+        ) : (
+          <Button
+            testID="signSIWEButton"
+            onPress={() => {
+              onPressSignSIWE()
+                .then(signature => {
+                  siweSignatureValueRef.current = signature
+                  onPressNext()
+                  console.log('Signature: ', signature)
+                })
+                .catch(error => {
+                  siweSignatureValueRef.current = 'Error, try again!'
+                  console.log('Error: ', error)
+                })
+            }}
+            label={_(msg`Sign SIWE`)}
+            accessibilityHint={_(msg`Sign SIWE to log in`)}
+            variant="solid"
+            color="primary"
+            size="medium">
+            <ButtonText>
+              <Trans>Log in with wallet signature</Trans>
+            </ButtonText>
+            {isProcessing && <ButtonIcon icon={Loader} />}
+          </Button>
+        )}
       </View>
     </FormContainer>
   )

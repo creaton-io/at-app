@@ -73,7 +73,7 @@ export const SplashScreen = ({
 
               {!kawaii && (
                 <View style={[a.pb_sm, a.pt_5xl]}>
-                  <Logotype width={161} fill={t.atoms.text.color} />
+                  <Logotype />
                 </View>
               )}
 
@@ -83,7 +83,7 @@ export const SplashScreen = ({
                   a.font_semibold,
                   t.atoms.text_contrast_medium,
                 ]}>
-                <Trans>What's up?</Trans>
+                <Trans>Create onchain</Trans>
               </Text>
             </View>
 

@@ -238,8 +238,8 @@ export function useSubmitSignup() {
         await createAccount({
           service: state.serviceUrl,
           email: state.email,
+          ethAddress: state.ethAddress,
           handle: createFullHandle(state.handle, state.userDomain),
-          password: state.ethAddress,
           birthDate: state.dateOfBirth,
           inviteCode: state.inviteCode.trim(),
           verificationCode: state.pendingSubmit?.verificationCode,

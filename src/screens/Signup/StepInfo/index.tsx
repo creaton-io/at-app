@@ -3,9 +3,11 @@ import {View} from 'react-native'
 import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 import * as EmailValidator from 'email-validator'
+import {useAccount} from 'wagmi'
 
 import {logEvent} from '#/lib/statsig/statsig'
 import {logger} from '#/logger'
+import {WalletComponents} from '#/screens/Login/LoginWallet'
 import {ScreenTransition} from '#/screens/Login/ScreenTransition'
 import {is13, is18, useSignupContext} from '#/screens/Signup/state'
 import {Policies} from '#/screens/Signup/StepInfo/Policies'
@@ -16,7 +18,6 @@ import {HostingProvider} from '#/components/forms/HostingProvider'
 import * as TextField from '#/components/forms/TextField'
 import {Envelope_Stroke2_Corner0_Rounded as Envelope} from '#/components/icons/Envelope'
 import {Ticket_Stroke2_Corner0_Rounded as Ticket} from '#/components/icons/Ticket'
-import {Zap_Stroke2_Corner0_Rounded as Zap} from '#/components/icons/Zap'
 import {Loader} from '#/components/Loader'
 import {BackNextButtons} from '../BackNextButtons'
 
@@ -46,12 +47,12 @@ export function StepInfo({
 
   const inviteCodeValueRef = useRef<string>(state.inviteCode)
   const emailValueRef = useRef<string>(state.email)
-  const ethAddressValueRef = useRef<string>(state.ethAddress)
+  const account = useAccount()
 
   const onNextPress = React.useCallback(async () => {
     const inviteCode = inviteCodeValueRef.current
     const email = emailValueRef.current
-    const ethAddress = ethAddressValueRef.current
+    const ethAddress = account.address
 
     if (!is13(state.dateOfBirth)) {
       return
@@ -78,7 +79,7 @@ export function StepInfo({
     if (!ethAddress) {
       return dispatch({
         type: 'setError',
-        value: _(msg`Please put in an Ethereum Address.`),
+        value: _(msg`Please connect or create a wallet`),
       })
     }
 
@@ -95,6 +96,7 @@ export function StepInfo({
     state.activeStep,
     state.dateOfBirth,
     state.serviceDescription?.inviteCodeRequired,
+    account.address,
   ])
 
   return (
@@ -157,22 +159,11 @@ export function StepInfo({
                 />
               </TextField.Root>
             </View>
-            <View>
+            <View style={{zIndex: 1000000000000000}}>
               <TextField.LabelText>
-                <Trans>Ethereum Address</Trans>
+                <Trans>Ethereum Wallet</Trans>
               </TextField.LabelText>
-              <TextField.Root>
-                <TextField.Icon icon={Zap} />
-                <TextField.Input
-                  testID="ethAddressInput"
-                  onChangeText={value => {
-                    ethAddressValueRef.current = value
-                  }}
-                  label={_(msg`Put in your Ethereum Address`)}
-                  defaultValue={state.ethAddress}
-                  autoComplete="additional-name"
-                />
-              </TextField.Root>
+              <WalletComponents />
             </View>
             <View>
               <DateField.LabelText>

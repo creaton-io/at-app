@@ -8,11 +8,11 @@ export const wagmiConfig = createConfig({
   connectors: [
     coinbaseWallet({
       appName: 'Creaton',
-      preference: 'smartWalletOnly', // set this to `all` to use EOAs as well
+      preference: 'all', // set this to `all` to use EOAs as well
       version: '4',
     }),
   ],
-  ssr: true,
+  ssr: false,
   transports: {
     [baseSepolia.id]: http(),
   },

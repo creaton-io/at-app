@@ -32,7 +32,7 @@ export const SplashScreen = ({
           <Logo width={92} fill="sky" />
 
           <View style={[a.pb_sm, a.pt_5xl]}>
-            <Logotype width={161} fill={t.atoms.text.color} />
+            <Logotype />
           </View>
 
           <Text
@@ -47,7 +47,7 @@ export const SplashScreen = ({
             accessibilityRole="button"
             label={_(msg`Create new account`)}
             accessibilityHint={_(
-              msg`Opens flow to create a new Bluesky account`,
+              msg`Opens flow to create a new Creaton account`,
             )}
             style={[a.mx_xl, a.mb_xl]}
             size="large"
@@ -62,7 +62,7 @@ export const SplashScreen = ({
             onPress={onPressSignin}
             label={_(msg`Sign in`)}
             accessibilityHint={_(
-              msg`Opens flow to sign into your existing Bluesky account`,
+              msg`Opens flow to sign into your existing Creaton account`,
             )}
             style={[a.mx_xl, a.mb_xl]}
             size="large"
