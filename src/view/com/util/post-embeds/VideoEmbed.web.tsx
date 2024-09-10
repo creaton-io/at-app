@@ -4,27 +4,29 @@ import {AppBskyEmbedVideo} from '@atproto/api'
 import {msg} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 
+import {isFirefox} from '#/lib/browser'
 import {clamp} from '#/lib/numbers'
-import {useGate} from '#/lib/statsig/statsig'
 import {
   HLSUnsupportedError,
   VideoEmbedInnerWeb,
   VideoNotFoundError,
 } from '#/view/com/util/post-embeds/VideoEmbedInner/VideoEmbedInnerWeb'
 import {atoms as a} from '#/alf'
+import {useFullscreen} from '#/components/hooks/useFullscreen'
 import {ErrorBoundary} from '../ErrorBoundary'
 import {useActiveVideoWeb} from './ActiveVideoWebContext'
 import * as VideoFallback from './VideoEmbedInner/VideoFallback'
 
 export function VideoEmbed({embed}: {embed: AppBskyEmbedVideo.View}) {
   const ref = useRef<HTMLDivElement>(null)
-  const gate = useGate()
   const {active, setActive, sendPosition, currentActiveView} =
     useActiveVideoWeb()
   const [onScreen, setOnScreen] = useState(false)
+  const [isFullscreen] = useFullscreen()
 
   useEffect(() => {
     if (!ref.current) return
+    if (isFullscreen && !isFirefox) return
     const observer = new IntersectionObserver(
       entries => {
         const entry = entries[0]
@@ -38,7 +40,7 @@ export function VideoEmbed({embed}: {embed: AppBskyEmbedVideo.View}) {
     )
     observer.observe(ref.current)
     return () => observer.disconnect()
-  }, [sendPosition])
+  }, [sendPosition, isFullscreen])
 
   const [key, setKey] = useState(0)
   const renderError = useCallback(
@@ -47,10 +49,6 @@ export function VideoEmbed({embed}: {embed: AppBskyEmbedVideo.View}) {
     ),
     [key],
   )
-
-  if (!gate('video_view_on_posts')) {
-    return null
-  }
 
   let aspectRatio = 16 / 9
 
@@ -106,11 +104,13 @@ function ViewportObserver({
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [nearScreen, setNearScreen] = useState(false)
+  const [isFullscreen] = useFullscreen()
 
   // Send position when scrolling. This is done with an IntersectionObserver
   // observing a div of 100vh height
   useEffect(() => {
     if (!ref.current) return
+    if (isFullscreen && !isFirefox) return
     const observer = new IntersectionObserver(
       entries => {
         const entry = entries[0]
@@ -124,7 +124,7 @@ function ViewportObserver({
     )
     observer.observe(ref.current)
     return () => observer.disconnect()
-  }, [sendPosition])
+  }, [sendPosition, isFullscreen])
 
   // In case scrolling hasn't started yet, send up the position
   useEffect(() => {
