@@ -83,7 +83,7 @@ export const SplashScreen = ({
                   a.font_semibold,
                   t.atoms.text_contrast_medium,
                 ]}>
-                <Trans>Create onchain</Trans>
+                <Trans>𝙲𝚛𝚎𝚊𝚝𝚎 𝚘𝚗𝚌𝚑𝚊𝚒𝚗 ㄒ乇丂ㄒ　ᐯ乇尺丂丨ㄖ几</Trans>
               </Text>
             </View>
 
