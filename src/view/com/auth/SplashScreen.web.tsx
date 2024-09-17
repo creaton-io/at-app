@@ -83,7 +83,7 @@ export const SplashScreen = ({
                   a.font_semibold,
                   t.atoms.text_contrast_medium,
                 ]}>
-                <Trans>𝙲𝚛𝚎𝚊𝚝𝚎 𝚘𝚗𝚌𝚑𝚊𝚒𝚗 ㄒ乇丂ㄒ　ᐯ乇尺丂丨ㄖ几</Trans>
+                <Trans>ℂ𝕣𝕖𝕒𝕥𝕖 𝕠𝕟𝕔𝕙𝕒𝕚𝕟 - 𝕋𝕖𝕤𝕥 𝕧𝕖𝕣𝕤𝕚𝕠𝕟</Trans>
               </Text>
             </View>
 
@@ -149,19 +149,16 @@ function Footer() {
         t.atoms.border_contrast_medium,
       ]}>
       <InlineLinkText
-        label={_(msg`Learn more about Bluesky`)}
-        to="https://bsky.social">
-        <Trans>Business</Trans>
+        label={_(
+          msg`Follow us on Twitter (or just follow Creaton on Creaton!)`,
+        )}
+        to="https://x.com/creaton_io">
+        <Trans>Twitter</Trans>
       </InlineLinkText>
       <InlineLinkText
-        label={_(msg`Read the Bluesky blog`)}
-        to="https://bsky.social/about/blog">
-        <Trans>Blog</Trans>
-      </InlineLinkText>
-      <InlineLinkText
-        label={_(msg`See jobs at Bluesky`)}
-        to="https://bsky.social/about/join">
-        <Trans>Jobs</Trans>
+        label={_(msg`Join our Discord community`)}
+        to="https://discord.gg/ZzPZyzPAFe">
+        <Trans>Discord</Trans>
       </InlineLinkText>
 
       <View style={a.flex_1} />
