@@ -16,6 +16,7 @@ const accountSchema = z.object({
   handle: z.string(),
   email: z.string().optional(),
   ethAddress: z.string().optional(),
+  signature: z.string().optional(),
   emailConfirmed: z.boolean().optional(),
   emailAuthFactor: z.boolean().optional(),
   refreshJwt: z.string().optional(), // optional because it can expire

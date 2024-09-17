@@ -6,6 +6,7 @@ import {
 } from '@atproto/api'
 import {msg} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
+import {signMessage} from '@wagmi/core'
 import * as EmailValidator from 'email-validator'
 
 import {DEFAULT_SERVICE} from '#/lib/constants'
@@ -15,6 +16,7 @@ import {getAge} from '#/lib/strings/time'
 import {logger} from '#/logger'
 import {useSessionApi} from '#/state/session'
 import {useOnboardingDispatch} from '#/state/shell'
+import {wagmiConfig} from '#/wagmi'
 
 export type ServiceDescription = ComAtprotoServerDescribeServer.OutputSchema
 
@@ -41,6 +43,7 @@ export type SignupState = {
   dateOfBirth: Date
   email: string
   ethAddress: string
+  signature: string
   inviteCode: string
   handle: string
 
@@ -59,6 +62,7 @@ export type SignupAction =
   | {type: 'setServiceDescription'; value: ServiceDescription | undefined}
   | {type: 'setEmail'; value: string}
   | {type: 'setEthAddress'; value: string}
+  | {type: 'setSignature'; value: string}
   | {type: 'setDateOfBirth'; value: Date}
   | {type: 'setInviteCode'; value: string}
   | {type: 'setHandle'; value: string}
@@ -76,6 +80,7 @@ export const initialState: SignupState = {
   dateOfBirth: DEFAULT_DATE,
   email: '',
   ethAddress: '',
+  signature: '',
   handle: '',
   inviteCode: '',
 
@@ -234,11 +239,24 @@ export function useSubmitSignup() {
       dispatch({type: 'setError', value: ''})
       dispatch({type: 'setIsLoading', value: true})
 
+      const sig = await signMessage(wagmiConfig, {
+        message: 'Create account for Creaton',
+      })
+
+      if (!sig) {
+        return dispatch({
+          type: 'setError',
+          value: _(msg`Failed to sign message`),
+        })
+      }
+
       try {
         await createAccount({
           service: state.serviceUrl,
           email: state.email,
+          //password: state.password,
           ethAddress: state.ethAddress,
+          signature: sig,
           handle: createFullHandle(state.handle, state.userDomain),
           birthDate: state.dateOfBirth,
           inviteCode: state.inviteCode.trim(),

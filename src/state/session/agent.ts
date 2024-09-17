@@ -94,7 +94,9 @@ export async function createAgentAndCreateAccount(
   {
     service,
     email,
+    password,
     ethAddress,
+    signature,
     handle,
     birthDate,
     inviteCode,
@@ -103,7 +105,9 @@ export async function createAgentAndCreateAccount(
   }: {
     service: string
     email: string
+    password: string
     ethAddress: string
+    signature: string
     handle: string
     birthDate: Date
     inviteCode?: string
@@ -119,7 +123,9 @@ export async function createAgentAndCreateAccount(
   const agent = new BskyAppAgent({service})
   await agent.createAccount({
     email,
+    password,
     ethAddress,
+    signature,
     handle,
     inviteCode,
     verificationPhone,
