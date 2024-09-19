@@ -21,7 +21,7 @@ import {useUnreadNotifications} from 'state/queries/notifications/unread'
 import {Button} from '#/view/com/util/forms/Button'
 import {Text} from '#/view/com/util/text/Text'
 import {Logo} from '#/view/icons/Logo'
-import {Logotype} from '#/view/icons/Logotype'
+//import {Logotype} from '#/view/icons/Logotype'
 import {Link} from 'view/com/util/Link'
 import {
   Bell_Filled_Corner0_Rounded as BellFilled,
@@ -183,9 +183,9 @@ export function BottomBarWeb() {
             }}>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
               <Logo width={32} />
-              <View style={{paddingTop: 4}}>
+              {/* <View style={{paddingTop: 4}}>
                 <Logotype width={80} fill={pal.text.color} />
-              </View>
+              </View> */}
             </View>
 
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>

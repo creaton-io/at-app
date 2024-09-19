@@ -252,7 +252,7 @@ function HomeScreenReady({
       <FeedPage
         testID="customFeedPage"
         isPageFocused
-        feed={`feedgen|${PROD_DEFAULT_FEED('whats-hot')}`}
+        feed={`feedgen|${PROD_DEFAULT_FEED('crypto')}`}
         renderEmptyState={renderCustomFeedEmptyState}
       />
     </Pager>
