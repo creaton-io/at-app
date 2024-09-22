@@ -4,7 +4,8 @@ import {AppBskyEmbedVideo} from '@atproto/api'
 import Hls from 'hls.js'
 
 import {atoms as a} from '#/alf'
-import {Controls} from './VideoWebControls'
+import {MediaInsetBorder} from '#/components/MediaInsetBorder'
+import {Controls} from './web-controls/VideoControls'
 
 export function VideoEmbedInnerWeb({
   embed,
@@ -35,7 +36,13 @@ export function VideoEmbedInnerWeb({
     if (!ref.current) return
     if (!Hls.isSupported()) throw new HLSUnsupportedError()
 
-    const hls = new Hls({capLevelToPlayerSize: true})
+    const hls = new Hls({
+      capLevelToPlayerSize: true,
+      maxMaxBufferLength: 10, // only load 10s ahead
+      // note: the amount buffered is affected by both maxBufferLength and maxBufferSize
+      // it will buffer until it it's greater than *both* of those values
+      // so we use maxMaxBufferLength to set the actual maximum amount of buffering instead
+    })
     hlsRef.current = hls
 
     hls.attachMedia(ref.current)
@@ -71,7 +78,7 @@ export function VideoEmbedInnerWeb({
   }, [embed.playlist])
 
   return (
-    <View style={[a.flex_1, a.rounded_sm, a.overflow_hidden]}>
+    <View style={[a.flex_1, a.rounded_md, a.overflow_hidden]}>
       <div ref={containerRef} style={{height: '100%', width: '100%'}}>
         <figure style={{margin: 0, position: 'absolute', inset: 0}}>
           <video
@@ -113,6 +120,7 @@ export function VideoEmbedInnerWeb({
           fullscreenRef={containerRef}
           hasSubtitleTrack={hasSubtitleTrack}
         />
+        <MediaInsetBorder />
       </div>
     </View>
   )

@@ -3,9 +3,11 @@ import {View} from 'react-native'
 import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 import * as EmailValidator from 'email-validator'
+import type tldts from 'tldts'
 import {useAccount} from 'wagmi'
 
 import {logEvent} from '#/lib/statsig/statsig'
+import {isEmailMaybeInvalid} from '#/lib/strings/email'
 import {logger} from '#/logger'
 import {WalletComponents} from '#/screens/Login/LoginWallet'
 import {ScreenTransition} from '#/screens/Login/ScreenTransition'
@@ -47,12 +49,40 @@ export function StepInfo({
 
   const inviteCodeValueRef = useRef<string>(state.inviteCode)
   const emailValueRef = useRef<string>(state.email)
+  const prevEmailValueRef = useRef<string>(state.email)
   const account = useAccount()
 
-  const onNextPress = React.useCallback(async () => {
+  const [hasWarnedEmail, setHasWarnedEmail] = React.useState<boolean>(false)
+
+  const tldtsRef = React.useRef<typeof tldts>()
+  React.useEffect(() => {
+    // @ts-expect-error - valid path
+    import('tldts/dist/index.cjs.min.js').then(tldts => {
+      tldtsRef.current = tldts
+    })
+  }, [])
+
+  const onNextPress = () => {
     const inviteCode = inviteCodeValueRef.current
     const email = emailValueRef.current
+    const emailChanged = prevEmailValueRef.current !== email
     const ethAddress = account.address
+
+    if (emailChanged && tldtsRef.current) {
+      if (isEmailMaybeInvalid(email, tldtsRef.current)) {
+        prevEmailValueRef.current = email
+        setHasWarnedEmail(true)
+        return dispatch({
+          type: 'setError',
+          value: _(
+            msg`It looks like you may have entered your email address incorrectly. Are you sure it's right?`,
+          ),
+        })
+      }
+    } else if (hasWarnedEmail) {
+      setHasWarnedEmail(false)
+    }
+    prevEmailValueRef.current = email
 
     if (!is13(state.dateOfBirth)) {
       return
@@ -90,14 +120,14 @@ export function StepInfo({
     logEvent('signup:nextPressed', {
       activeStep: state.activeStep,
     })
-  }, [
-    _,
-    dispatch,
-    state.activeStep,
-    state.dateOfBirth,
-    state.serviceDescription?.inviteCodeRequired,
-    account.address,
-  ])
+  } // }, [
+  //   _,
+  //   dispatch,
+  //   state.activeStep,
+  //   state.dateOfBirth,
+  //   state.serviceDescription?.inviteCodeRequired,
+  //   account.address,
+  // ])
 
   return (
     <ScreenTransition>
@@ -150,6 +180,9 @@ export function StepInfo({
                   testID="emailInput"
                   onChangeText={value => {
                     emailValueRef.current = value.trim()
+                    if (hasWarnedEmail) {
+                      setHasWarnedEmail(false)
+                    }
                   }}
                   label={_(msg`Enter your email address`)}
                   defaultValue={state.email}
@@ -197,6 +230,7 @@ export function StepInfo({
         onBackPress={onPressBack}
         onNextPress={onNextPress}
         onRetryPress={refetchServer}
+        overrideNextText={hasWarnedEmail ? _(msg`It's correct`) : undefined}
       />
     </ScreenTransition>
   )

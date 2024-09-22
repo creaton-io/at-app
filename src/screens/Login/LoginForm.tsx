@@ -14,14 +14,14 @@ import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 
 import {useAnalytics} from '#/lib/analytics/analytics'
+import {useRequestNotificationsPermission} from '#/lib/notifications/notifications'
 import {isNetworkError} from '#/lib/strings/errors'
 import {cleanError} from '#/lib/strings/errors'
 import {createFullHandle} from '#/lib/strings/handles'
 import {logger} from '#/logger'
+import {useSetHasCheckedForStarterPack} from '#/state/preferences/used-starter-packs'
 import {useSessionApi} from '#/state/session'
 import {useLoggedOutViewControls} from '#/state/shell/logged-out'
-import {useRequestNotificationsPermission} from 'lib/notifications/notifications'
-import {useSetHasCheckedForStarterPack} from 'state/preferences/used-starter-packs'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {FormError} from '#/components/forms/FormError'
@@ -59,7 +59,6 @@ export const LoginForm = ({
   const {track} = useAnalytics()
   const t = useTheme()
   const [isProcessing, setIsProcessing] = useState<boolean>(false)
-  const [isReady, setIsReady] = useState<boolean>(false)
   const [isAuthFactorTokenNeeded, setIsAuthFactorTokenNeeded] =
     useState<boolean>(false)
   const identifierValueRef = useRef<string>(initialHandle || '')
@@ -82,11 +81,17 @@ export const LoginForm = ({
     Keyboard.dismiss()
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
     setError('')
-    setIsProcessing(true)
 
     const identifier = identifierValueRef.current.toLowerCase().trim()
     const siweSignature = siweSignatureValueRef.current
     const authFactorToken = authFactorTokenValueRef.current
+
+    if (!identifier || !siweSignature) {
+      setError(_(msg`Invalid username or password`))
+      return
+    }
+
+    setIsProcessing(true)
 
     try {
       // try to guess the handle if the user just gave their own username
@@ -156,22 +161,6 @@ export const LoginForm = ({
     }
   }
 
-  const checkIsReady = () => {
-    if (
-      !!serviceDescription &&
-      !!identifierValueRef.current &&
-      !!siweSignatureValueRef.current
-    ) {
-      if (!isReady) {
-        setIsReady(true)
-      }
-    } else {
-      if (isReady) {
-        setIsReady(false)
-      }
-    }
-  }
-
   return (
     <FormContainer testID="loginForm" titleText={<Trans>Sign in</Trans>}>
       <WalletComponents />
@@ -204,7 +193,6 @@ export const LoginForm = ({
               defaultValue={initialHandle || ''}
               onChangeText={v => {
                 identifierValueRef.current = v
-                checkIsReady()
               }}
               onSubmitEditing={() => {
                 siweSignatureRef.current?.focus()
@@ -256,7 +244,7 @@ export const LoginForm = ({
           label={_(msg`Back`)}
           variant="solid"
           color="secondary"
-          size="medium"
+          size="large"
           onPress={onPressBack}>
           <ButtonText>
             <Trans>Back</Trans>
@@ -270,7 +258,7 @@ export const LoginForm = ({
             accessibilityHint={_(msg`Retries login`)}
             variant="solid"
             color="secondary"
-            size="medium"
+            size="large"
             onPress={onPressRetryConnect}>
             <ButtonText>
               <Trans>Retry</Trans>
@@ -283,20 +271,6 @@ export const LoginForm = ({
               <Trans>Connecting...</Trans>
             </Text>
           </>
-        ) : isReady ? (
-          <Button
-            testID="loginNextButton"
-            label={_(msg`Next`)}
-            accessibilityHint={_(msg`Navigates to the next screen`)}
-            variant="solid"
-            color="primary"
-            size="medium"
-            onPress={onPressNext}>
-            <ButtonText>
-              <Trans>Next</Trans>
-            </ButtonText>
-            {isProcessing && <ButtonIcon icon={Loader} />}
-          </Button>
         ) : (
           <Button
             testID="signSIWEButton"
@@ -316,7 +290,7 @@ export const LoginForm = ({
             accessibilityHint={_(msg`Sign SIWE to log in`)}
             variant="solid"
             color="primary"
-            size="medium">
+            size="large">
             <ButtonText>
               <Trans>Log in with wallet signature</Trans>
             </ButtonText>
