@@ -13,16 +13,16 @@ import {getCurrentRoute, isTab} from '#/lib/routes/helpers'
 import {makeProfileLink} from '#/lib/routes/links'
 import {CommonNavigatorParams} from '#/lib/routes/types'
 import {s} from '#/lib/styles'
+import {useUnreadMessageCount} from '#/state/queries/messages/list-converations'
+import {useUnreadNotifications} from '#/state/queries/notifications/unread'
 import {useSession} from '#/state/session'
 import {useLoggedOutViewControls} from '#/state/shell/logged-out'
 import {useCloseAllActiveElements} from '#/state/util'
-import {useUnreadMessageCount} from 'state/queries/messages/list-converations'
-import {useUnreadNotifications} from 'state/queries/notifications/unread'
 import {Button} from '#/view/com/util/forms/Button'
+//import {Logotype} from '#/view/icons/Logotype'
+import {Link} from '#/view/com/util/Link'
 import {Text} from '#/view/com/util/text/Text'
 import {Logo} from '#/view/icons/Logo'
-import {Logotype} from '#/view/icons/Logotype'
-import {Link} from 'view/com/util/Link'
 import {
   Bell_Filled_Corner0_Rounded as BellFilled,
   Bell_Stroke2_Corner0_Rounded as Bell,
@@ -183,9 +183,9 @@ export function BottomBarWeb() {
             }}>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
               <Logo width={32} />
-              <View style={{paddingTop: 4}}>
+              {/* <View style={{paddingTop: 4}}>
                 <Logotype width={80} fill={pal.text.color} />
-              </View>
+              </View> */}
             </View>
 
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>

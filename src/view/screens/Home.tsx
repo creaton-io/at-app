@@ -4,7 +4,13 @@ import {useFocusEffect} from '@react-navigation/native'
 
 import {PROD_DEFAULT_FEED} from '#/lib/constants'
 import {useNonReactiveCallback} from '#/lib/hooks/useNonReactiveCallback'
+import {useOTAUpdates} from '#/lib/hooks/useOTAUpdates'
 import {useSetTitle} from '#/lib/hooks/useSetTitle'
+import {useRequestNotificationsPermission} from '#/lib/notifications/notifications'
+import {
+  HomeTabNavigatorParams,
+  NativeStackScreenProps,
+} from '#/lib/routes/types'
 import {logEvent, LogEvents} from '#/lib/statsig/statsig'
 import {emitSoftReset} from '#/state/events'
 import {SavedFeedSourceInfo, usePinnedFeedsInfos} from '#/state/queries/feed'
@@ -14,14 +20,11 @@ import {UsePreferencesQueryResponse} from '#/state/queries/preferences/types'
 import {useSession} from '#/state/session'
 import {useSetDrawerSwipeDisabled, useSetMinimalShellMode} from '#/state/shell'
 import {useSelectedFeed, useSetSelectedFeed} from '#/state/shell/selected-feed'
-import {useOTAUpdates} from 'lib/hooks/useOTAUpdates'
-import {useRequestNotificationsPermission} from 'lib/notifications/notifications'
-import {HomeTabNavigatorParams, NativeStackScreenProps} from 'lib/routes/types'
-import {FeedPage} from 'view/com/feeds/FeedPage'
-import {Pager, PagerRef, RenderTabBarFnProps} from 'view/com/pager/Pager'
-import {CustomFeedEmptyState} from 'view/com/posts/CustomFeedEmptyState'
-import {FollowingEmptyState} from 'view/com/posts/FollowingEmptyState'
-import {FollowingEndOfFeed} from 'view/com/posts/FollowingEndOfFeed'
+import {FeedPage} from '#/view/com/feeds/FeedPage'
+import {Pager, PagerRef, RenderTabBarFnProps} from '#/view/com/pager/Pager'
+import {CustomFeedEmptyState} from '#/view/com/posts/CustomFeedEmptyState'
+import {FollowingEmptyState} from '#/view/com/posts/FollowingEmptyState'
+import {FollowingEndOfFeed} from '#/view/com/posts/FollowingEndOfFeed'
 import {NoFeedsPinned} from '#/screens/Home/NoFeedsPinned'
 import {HomeHeader} from '../com/home/HomeHeader'
 
@@ -252,7 +255,7 @@ function HomeScreenReady({
       <FeedPage
         testID="customFeedPage"
         isPageFocused
-        feed={`feedgen|${PROD_DEFAULT_FEED('whats-hot')}`}
+        feed={`feedgen|${PROD_DEFAULT_FEED('crypto')}`}
         renderEmptyState={renderCustomFeedEmptyState}
       />
     </Pager>

@@ -5,7 +5,7 @@ import {networkRetry} from '#/lib/async/retry'
 import {
   DISCOVER_SAVED_FEED,
   IS_PROD_SERVICE,
-  PUBLIC_BSKY_SERVICE,
+  PUBLIC_CREATON_SERVICE,
   TIMELINE_SAVED_FEED,
 } from '#/lib/constants'
 import {tryFetchGates} from '#/lib/statsig/statsig'
@@ -23,7 +23,7 @@ import {isSessionExpired, isSignupQueued} from './util'
 
 export function createPublicAgent() {
   configureModerationForGuest() // Side effect but only relevant for tests
-  return new BskyAppAgent({service: PUBLIC_BSKY_SERVICE})
+  return new BskyAppAgent({service: PUBLIC_CREATON_SERVICE})
 }
 
 export async function createAgentAndResume(
@@ -67,12 +67,12 @@ export async function createAgentAndLogin(
   {
     service,
     identifier,
-    password,
+    siweSignature,
     authFactorToken,
   }: {
     service: string
     identifier: string
-    password: string
+    siweSignature: string
     authFactorToken?: string
   },
   onSessionChange: (
@@ -82,7 +82,7 @@ export async function createAgentAndLogin(
   ) => void,
 ) {
   const agent = new BskyAppAgent({service})
-  await agent.login({identifier, password, authFactorToken})
+  await agent.login({identifier, siweSignature, authFactorToken})
 
   const account = agentToSessionAccountOrThrow(agent)
   const gates = tryFetchGates(account.did, 'prefer-fresh-gates')
@@ -95,6 +95,8 @@ export async function createAgentAndCreateAccount(
     service,
     email,
     password,
+    ethAddress,
+    signature,
     handle,
     birthDate,
     inviteCode,
@@ -104,6 +106,8 @@ export async function createAgentAndCreateAccount(
     service: string
     email: string
     password: string
+    ethAddress: string
+    signature: string
     handle: string
     birthDate: Date
     inviteCode?: string
@@ -120,6 +124,8 @@ export async function createAgentAndCreateAccount(
   await agent.createAccount({
     email,
     password,
+    ethAddress,
+    signature,
     handle,
     inviteCode,
     verificationPhone,
@@ -196,6 +202,7 @@ export function agentToSessionAccount(
     did: agent.session.did,
     handle: agent.session.handle,
     email: agent.session.email,
+    ethAddress: agent.session.ethAddress,
     emailConfirmed: agent.session.emailConfirmed || false,
     emailAuthFactor: agent.session.emailAuthFactor || false,
     refreshJwt: agent.session.refreshJwt,
@@ -215,6 +222,7 @@ export function sessionAccountToSession(
     accessJwt: account.accessJwt ?? '',
     did: account.did,
     email: account.email,
+    ethAddress: account.ethAddress,
     emailAuthFactor: account.emailAuthFactor,
     emailConfirmed: account.emailConfirmed,
     handle: account.handle,

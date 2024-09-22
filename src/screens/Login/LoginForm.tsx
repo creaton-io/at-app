@@ -14,26 +14,25 @@ import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 
 import {useAnalytics} from '#/lib/analytics/analytics'
+import {useRequestNotificationsPermission} from '#/lib/notifications/notifications'
 import {isNetworkError} from '#/lib/strings/errors'
 import {cleanError} from '#/lib/strings/errors'
 import {createFullHandle} from '#/lib/strings/handles'
 import {logger} from '#/logger'
+import {useSetHasCheckedForStarterPack} from '#/state/preferences/used-starter-packs'
 import {useSessionApi} from '#/state/session'
 import {useLoggedOutViewControls} from '#/state/shell/logged-out'
-import {useRequestNotificationsPermission} from 'lib/notifications/notifications'
-import {useSetHasCheckedForStarterPack} from 'state/preferences/used-starter-packs'
 import {atoms as a, useTheme} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {FormError} from '#/components/forms/FormError'
 import {HostingProvider} from '#/components/forms/HostingProvider'
 import * as TextField from '#/components/forms/TextField'
 import {At_Stroke2_Corner0_Rounded as At} from '#/components/icons/At'
-import {Lock_Stroke2_Corner0_Rounded as Lock} from '#/components/icons/Lock'
 import {Ticket_Stroke2_Corner0_Rounded as Ticket} from '#/components/icons/Ticket'
 import {Loader} from '#/components/Loader'
 import {Text} from '#/components/Typography'
 import {FormContainer} from './FormContainer'
-
+import {WalletComponents} from './LoginWallet'
 type ServiceDescription = ComAtprotoServerDescribeServer.OutputSchema
 
 export const LoginForm = ({
@@ -45,7 +44,7 @@ export const LoginForm = ({
   setServiceUrl,
   onPressRetryConnect,
   onPressBack,
-  onPressForgotPassword,
+  onPressSignSIWE,
 }: {
   error: string
   serviceUrl: string
@@ -55,7 +54,7 @@ export const LoginForm = ({
   setServiceUrl: (v: string) => void
   onPressRetryConnect: () => void
   onPressBack: () => void
-  onPressForgotPassword: () => void
+  onPressSignSIWE: () => Promise<string>
 }) => {
   const {track} = useAnalytics()
   const t = useTheme()
@@ -63,9 +62,9 @@ export const LoginForm = ({
   const [isAuthFactorTokenNeeded, setIsAuthFactorTokenNeeded] =
     useState<boolean>(false)
   const identifierValueRef = useRef<string>(initialHandle || '')
-  const passwordValueRef = useRef<string>('')
+  const siweSignatureValueRef = useRef<string>('')
   const authFactorTokenValueRef = useRef<string>('')
-  const passwordRef = useRef<TextInput>(null)
+  const siweSignatureRef = useRef<TextInput>(null)
   const {_} = useLingui()
   const {login} = useSessionApi()
   const requestNotificationsPermission = useRequestNotificationsPermission()
@@ -84,10 +83,10 @@ export const LoginForm = ({
     setError('')
 
     const identifier = identifierValueRef.current.toLowerCase().trim()
-    const password = passwordValueRef.current
+    const siweSignature = siweSignatureValueRef.current
     const authFactorToken = authFactorTokenValueRef.current
 
-    if (!identifier || !password) {
+    if (!identifier || !siweSignature) {
       setError(_(msg`Invalid username or password`))
       return
     }
@@ -122,7 +121,7 @@ export const LoginForm = ({
         {
           service: serviceUrl,
           identifier: fullIdent,
-          password,
+          siweSignature,
           authFactorToken: authFactorToken.trim(),
         },
         'LoginForm',
@@ -164,6 +163,7 @@ export const LoginForm = ({
 
   return (
     <FormContainer testID="loginForm" titleText={<Trans>Sign in</Trans>}>
+      <WalletComponents />
       <View>
         <TextField.LabelText>
           <Trans>Hosting provider</Trans>
@@ -195,7 +195,7 @@ export const LoginForm = ({
                 identifierValueRef.current = v
               }}
               onSubmitEditing={() => {
-                passwordRef.current?.focus()
+                siweSignatureRef.current?.focus()
               }}
               blurOnSubmit={false} // prevents flickering due to onSubmitEditing going to next field
               editable={!isProcessing}
@@ -203,47 +203,6 @@ export const LoginForm = ({
                 msg`Input the username or email address you used at signup`,
               )}
             />
-          </TextField.Root>
-
-          <TextField.Root>
-            <TextField.Icon icon={Lock} />
-            <TextField.Input
-              testID="loginPasswordInput"
-              inputRef={passwordRef}
-              label={_(msg`Password`)}
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="password"
-              returnKeyType="done"
-              enablesReturnKeyAutomatically={true}
-              secureTextEntry={true}
-              textContentType="password"
-              clearButtonMode="while-editing"
-              onChangeText={v => {
-                passwordValueRef.current = v
-              }}
-              onSubmitEditing={onPressNext}
-              blurOnSubmit={false} // HACK: https://github.com/facebook/react-native/issues/21911#issuecomment-558343069 Keyboard blur behavior is now handled in onSubmitEditing
-              editable={!isProcessing}
-              accessibilityHint={_(msg`Input your password`)}
-            />
-            <Button
-              testID="forgotPasswordButton"
-              onPress={onPressForgotPassword}
-              label={_(msg`Forgot password?`)}
-              accessibilityHint={_(msg`Opens password reset form`)}
-              variant="solid"
-              color="secondary"
-              style={[
-                a.rounded_sm,
-                // t.atoms.bg_contrast_100,
-                {marginLeft: 'auto', left: 6, padding: 6},
-                a.z_10,
-              ]}>
-              <ButtonText>
-                <Trans>Forgot?</Trans>
-              </ButtonText>
-            </Button>
           </TextField.Root>
         </View>
       </View>
@@ -314,15 +273,26 @@ export const LoginForm = ({
           </>
         ) : (
           <Button
-            testID="loginNextButton"
-            label={_(msg`Next`)}
-            accessibilityHint={_(msg`Navigates to the next screen`)}
+            testID="signSIWEButton"
+            onPress={() => {
+              onPressSignSIWE()
+                .then(signature => {
+                  siweSignatureValueRef.current = signature
+                  onPressNext()
+                  console.log('Signature: ', signature)
+                })
+                .catch(error => {
+                  siweSignatureValueRef.current = 'Error, try again!'
+                  console.log('Error: ', error)
+                })
+            }}
+            label={_(msg`Sign SIWE`)}
+            accessibilityHint={_(msg`Sign SIWE to log in`)}
             variant="solid"
             color="primary"
-            size="large"
-            onPress={onPressNext}>
+            size="large">
             <ButtonText>
-              <Trans>Next</Trans>
+              <Trans>Log in with wallet signature</Trans>
             </ButtonText>
             {isProcessing && <ButtonIcon icon={Loader} />}
           </Button>

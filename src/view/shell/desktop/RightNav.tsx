@@ -3,14 +3,14 @@ import {StyleSheet, View} from 'react-native'
 import {msg} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 
+import {FEEDBACK_FORM_URL} from '#/lib/constants'
+import {usePalette} from '#/lib/hooks/usePalette'
+import {useWebMediaQueries} from '#/lib/hooks/useWebMediaQueries'
+import {s} from '#/lib/styles'
 import {useKawaiiMode} from '#/state/preferences/kawaii'
 import {useSession} from '#/state/session'
-import {FEEDBACK_FORM_URL, HELP_DESK_URL} from 'lib/constants'
-import {usePalette} from 'lib/hooks/usePalette'
-import {useWebMediaQueries} from 'lib/hooks/useWebMediaQueries'
-import {s} from 'lib/styles'
-import {TextLink} from 'view/com/util/Link'
-import {Text} from 'view/com/util/text/Text'
+import {TextLink} from '#/view/com/util/Link'
+import {Text} from '#/view/com/util/text/Text'
 import {atoms as a} from '#/alf'
 import {ProgressGuideList} from '#/components/ProgressGuide/List'
 import {DesktopFeeds} from './Feeds'
@@ -74,7 +74,7 @@ export function DesktopRightNav({routeName}: {routeName: string}) {
                 </Text>
               </>
             )}
-            <TextLink
+            {/* <TextLink
               type="md"
               style={pal.link}
               href="https://bsky.social/about/support/privacy-policy"
@@ -97,7 +97,7 @@ export function DesktopRightNav({routeName}: {routeName: string}) {
               style={pal.link}
               href={HELP_DESK_URL}
               text={_(msg`Help`)}
-            />
+            /> */}
           </View>
           {kawaii && (
             <Text type="md" style={[pal.textLight, {marginTop: 12}]}>
