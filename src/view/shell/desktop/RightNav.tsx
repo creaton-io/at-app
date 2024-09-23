@@ -1,9 +1,9 @@
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
-import {msg} from '@lingui/macro'
-import {useLingui} from '@lingui/react'
 
-import {FEEDBACK_FORM_URL} from '#/lib/constants'
+//import {msg} from '@lingui/macro'
+//import {useLingui} from '@lingui/react'
+//import {FEEDBACK_FORM_URL} from '#/lib/constants'
 import {usePalette} from '#/lib/hooks/usePalette'
 import {useWebMediaQueries} from '#/lib/hooks/useWebMediaQueries'
 import {s} from '#/lib/styles'
@@ -11,6 +11,7 @@ import {useKawaiiMode} from '#/state/preferences/kawaii'
 import {useSession} from '#/state/session'
 import {TextLink} from '#/view/com/util/Link'
 import {Text} from '#/view/com/util/text/Text'
+import {WalletComponents} from '#/screens/Login/LoginWallet'
 import {atoms as a} from '#/alf'
 import {ProgressGuideList} from '#/components/ProgressGuide/List'
 import {DesktopFeeds} from './Feeds'
@@ -18,8 +19,8 @@ import {DesktopSearch} from './Search'
 
 export function DesktopRightNav({routeName}: {routeName: string}) {
   const pal = usePalette('default')
-  const {_} = useLingui()
-  const {hasSession, currentAccount} = useSession()
+  //const {_} = useLingui()
+  const {hasSession} = useSession() // currentAccount
 
   const kawaii = useKawaiiMode()
 
@@ -31,6 +32,18 @@ export function DesktopRightNav({routeName}: {routeName: string}) {
   return (
     <View style={[styles.rightNav, pal.view]}>
       <View style={{paddingVertical: 20}}>
+        <View
+          style={[
+            {
+              marginBottom: 18,
+              zIndex: 1000000000000000,
+              marginLeft: 20,
+            },
+            a.flex_row,
+            a.justify_center,
+          ]}>
+          <WalletComponents />
+        </View>
         {routeName === 'Search' ? (
           <View style={{marginBottom: 18}}>
             <DesktopFeeds />
@@ -58,7 +71,7 @@ export function DesktopRightNav({routeName}: {routeName: string}) {
             },
           ]}>
           <View style={[{flexWrap: 'wrap'}, s.flexRow, a.gap_xs]}>
-            {hasSession && (
+            {/* {hasSession && (
               <>
                 <TextLink
                   type="md"
@@ -73,7 +86,7 @@ export function DesktopRightNav({routeName}: {routeName: string}) {
                   &middot;
                 </Text>
               </>
-            )}
+            )} */}
             {/* <TextLink
               type="md"
               style={pal.link}

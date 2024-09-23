@@ -439,7 +439,7 @@
     "@atproto/lexicon" "^0.4.1"
     zod "^3.23.8"
 
-"@atproto/xrpc@^0.6.2", "@atproto/xrpc@workspace:^":
+"@atproto/xrpc@workspace:^":
   version "0.6.2"
   resolved "https://registry.yarnpkg.com/@atproto/xrpc/-/xrpc-0.6.2.tgz#634228a7e533de01bda2214837d11574fdadad55"
   integrity sha512-as/gb08xJb02HAGNrSQSumCe10WnOAcnM6bR6KMatQyQJuEu7OY6ZDSTM/4HfjjoxsNqdvPmbYuoUab1bKTNlA==

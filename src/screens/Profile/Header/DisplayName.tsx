@@ -16,6 +16,7 @@ export function ProfileHeaderDisplayName({
   moderation: ModerationDecision
 }) {
   const t = useTheme()
+
   return (
     <View pointerEvents="none">
       <Text

@@ -9,22 +9,25 @@ import {
 import {msg, Trans} from '@lingui/macro'
 import {useLingui} from '@lingui/react'
 
+import {useAnalytics} from '#/lib/analytics/analytics'
+import {sanitizeDisplayName} from '#/lib/strings/display-names'
 import {logger} from '#/logger'
 import {isIOS} from '#/platform/detection'
+import {useProfileShadow} from '#/state/cache/profile-shadow'
 import {Shadow} from '#/state/cache/types'
 import {useModalControls} from '#/state/modals'
 import {
   useProfileBlockMutationQueue,
   useProfileFollowMutationQueue,
 } from '#/state/queries/profile'
+//import {H3, P, Text} from '#/components/Typography'
+import {useResolveDidDocQuery} from '#/state/queries/resolve-uri'
 import {useRequireAuth, useSession} from '#/state/session'
-import {useAnalytics} from 'lib/analytics/analytics'
-import {sanitizeDisplayName} from 'lib/strings/display-names'
-import {useProfileShadow} from 'state/cache/profile-shadow'
 import {ProfileMenu} from '#/view/com/profile/ProfileMenu'
 import * as Toast from '#/view/com/util/Toast'
 import {atoms as a} from '#/alf'
 import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+import * as Dialog from '#/components/Dialog'
 import {MessageProfileButton} from '#/components/dms/MessageProfileButton'
 import {Check_Stroke2_Corner0_Rounded as Check} from '#/components/icons/Check'
 import {PlusLarge_Stroke2_Corner0_Rounded as Plus} from '#/components/icons/Plus'
@@ -38,6 +41,7 @@ import {ProfileHeaderDisplayName} from './DisplayName'
 import {ProfileHeaderHandle} from './Handle'
 import {ProfileHeaderMetrics} from './Metrics'
 import {ProfileHeaderShell} from './Shell'
+import TipComponents from './TipComponents'
 
 interface Props {
   profile: AppBskyActorDefs.ProfileViewDetailed
@@ -60,6 +64,7 @@ let ProfileHeaderStandard = ({
   const {_} = useLingui()
   const {openModal} = useModalControls()
   const {track} = useAnalytics()
+  const basic = Dialog.useDialogControl()
   const moderation = useMemo(
     () => moderateProfile(profile, moderationOpts),
     [profile, moderationOpts],
@@ -83,6 +88,17 @@ let ProfileHeaderStandard = ({
       profile,
     })
   }, [track, openModal, profile])
+
+  const useResolveDidQueryResult = useResolveDidDocQuery(profile.did)
+  let fullEthAddress = ''
+  if (
+    useResolveDidQueryResult.data &&
+    useResolveDidQueryResult.data.alsoKnownAs[1]
+  ) {
+    const parts = useResolveDidQueryResult.data.alsoKnownAs[1].split(':')
+    const ethereumAddress = parts[2]
+    fullEthAddress = ethereumAddress
+  }
 
   const onPressFollow = () => {
     requireAuth(async () => {
@@ -197,6 +213,18 @@ let ProfileHeaderStandard = ({
           ) : !profile.viewer?.blockedBy ? (
             <>
               {hasSession && <MessageProfileButton profile={profile} />}
+              {fullEthAddress && (
+                <Button
+                  variant="gradient"
+                  color="gradient_sunset"
+                  size="small"
+                  onPress={() => {
+                    basic.open()
+                  }}
+                  label="Open basic dialog">
+                  <ButtonText>Tip</ButtonText>
+                </Button>
+              )}
 
               <Button
                 testID={profile.viewer?.following ? 'unfollowBtn' : 'followBtn'}
@@ -275,6 +303,15 @@ let ProfileHeaderStandard = ({
         }
         confirmButtonColor="negative"
       />
+      <Dialog.Outer control={basic}>
+        <Dialog.Handle />
+
+        <Dialog.Inner label="test" style={{width: 300}}>
+          {/* <H3 nativeID="dialog-title">Dialog</H3>
+          <P nativeID="dialog-description">A basic dialog</P> */}
+          <TipComponents sendAddress={fullEthAddress} />
+        </Dialog.Inner>
+      </Dialog.Outer>
     </ProfileHeaderShell>
   )
 }
