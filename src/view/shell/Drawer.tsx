@@ -1,6 +1,6 @@
 import React, {ComponentProps} from 'react'
 import {
-  Linking,
+  //Linking,
   SafeAreaView,
   ScrollView,
   StyleProp,
@@ -15,7 +15,7 @@ import {useLingui} from '@lingui/react'
 import {StackActions, useNavigation} from '@react-navigation/native'
 
 import {useAnalytics} from '#/lib/analytics/analytics'
-import {FEEDBACK_FORM_URL, HELP_DESK_URL} from '#/lib/constants'
+//import {FEEDBACK_FORM_URL, HELP_DESK_URL} from '#/lib/constants'
 import {useNavigationTabState} from '#/lib/hooks/useNavigationTabState'
 import {usePalette} from '#/lib/hooks/usePalette'
 import {getTabState, TabState} from '#/lib/routes/helpers'
@@ -33,9 +33,10 @@ import {formatCount} from '#/view/com/util/numeric/format'
 import {Text} from '#/view/com/util/text/Text'
 import {UserAvatar} from '#/view/com/util/UserAvatar'
 import {NavSignupCard} from '#/view/shell/NavSignupCard'
+import {WalletComponents} from '#/screens/Login/LoginWallet'
 import {atoms as a} from '#/alf'
 import {useTheme as useAlfTheme} from '#/alf'
-import {Button, ButtonIcon, ButtonText} from '#/components/Button'
+//import {Button, ButtonIcon, ButtonText} from '#/components/Button'
 import {
   Bell_Filled_Corner0_Rounded as BellFilled,
   Bell_Stroke2_Corner0_Rounded as Bell,
@@ -51,7 +52,7 @@ import {
 } from '#/components/icons/HomeOpen'
 import {MagnifyingGlass_Filled_Stroke2_Corner0_Rounded as MagnifyingGlassFilled} from '#/components/icons/MagnifyingGlass'
 import {MagnifyingGlass2_Stroke2_Corner0_Rounded as MagnifyingGlass} from '#/components/icons/MagnifyingGlass2'
-import {Message_Stroke2_Corner0_Rounded as Message} from '#/components/icons/Message'
+//import {Message_Stroke2_Corner0_Rounded as Message} from '#/components/icons/Message'
 import {SettingsGear2_Stroke2_Corner0_Rounded as Settings} from '#/components/icons/SettingsGear2'
 import {
   UserCircle_Filled_Corner0_Rounded as UserCircleFilled,
@@ -143,7 +144,7 @@ let DrawerContent = ({}: {}): React.ReactNode => {
   const theme = useTheme()
   const t = useAlfTheme()
   const pal = usePalette('default')
-  const {_} = useLingui()
+  //const {_} = useLingui()
   const setDrawerOpen = useSetDrawerOpen()
   const navigation = useNavigation<NavigationProp>()
   const {track} = useAnalytics()
@@ -217,20 +218,20 @@ let DrawerContent = ({}: {}): React.ReactNode => {
     setDrawerOpen(false)
   }, [navigation, track, setDrawerOpen])
 
-  const onPressFeedback = React.useCallback(() => {
-    track('Menu:FeedbackClicked')
-    Linking.openURL(
-      FEEDBACK_FORM_URL({
-        email: currentAccount?.email,
-        handle: currentAccount?.handle,
-      }),
-    )
-  }, [track, currentAccount])
+  // const onPressFeedback = React.useCallback(() => {
+  //   track('Menu:FeedbackClicked')
+  //   Linking.openURL(
+  //     FEEDBACK_FORM_URL({
+  //       email: currentAccount?.email,
+  //       handle: currentAccount?.handle,
+  //     }),
+  //   )
+  // }, [track, currentAccount])
 
-  const onPressHelp = React.useCallback(() => {
-    track('Menu:HelpClicked')
-    Linking.openURL(HELP_DESK_URL)
-  }, [track])
+  // const onPressHelp = React.useCallback(() => {
+  //   track('Menu:HelpClicked')
+  //   Linking.openURL(HELP_DESK_URL)
+  // }, [track])
 
   // rendering
   // =
@@ -260,6 +261,8 @@ let DrawerContent = ({}: {}): React.ReactNode => {
           {hasSession ? (
             <>
               <View style={{height: 16}} />
+
+              <WalletComponents />
               <SearchMenuItem isActive={isAtSearch} onPress={onPressSearch} />
               <HomeMenuItem isActive={isAtHome} onPress={onPressHome} />
               <NotificationsMenuItem
@@ -285,7 +288,7 @@ let DrawerContent = ({}: {}): React.ReactNode => {
           <View style={styles.smallSpacer} />
 
           <View style={[{flexWrap: 'wrap', gap: 12}, s.flexCol]}>
-            <TextLink
+            {/* <TextLink
               type="md"
               style={pal.link}
               href="https://bsky.social/about/support/tos"
@@ -296,7 +299,7 @@ let DrawerContent = ({}: {}): React.ReactNode => {
               style={pal.link}
               href="https://bsky.social/about/support/privacy-policy"
               text={_(msg`Privacy Policy`)}
-            />
+            /> */}
             {kawaii && (
               <Text type="md" style={pal.textLight}>
                 Logo by{' '}
@@ -314,10 +317,10 @@ let DrawerContent = ({}: {}): React.ReactNode => {
           <View style={styles.smallSpacer} />
         </ScrollView>
 
-        <DrawerFooter
+        {/* <DrawerFooter
           onPressFeedback={onPressFeedback}
           onPressHelp={onPressHelp}
-        />
+        /> */}
       </SafeAreaView>
     </View>
   )
@@ -325,44 +328,44 @@ let DrawerContent = ({}: {}): React.ReactNode => {
 DrawerContent = React.memo(DrawerContent)
 export {DrawerContent}
 
-let DrawerFooter = ({
-  onPressFeedback,
-  onPressHelp,
-}: {
-  onPressFeedback: () => void
-  onPressHelp: () => void
-}): React.ReactNode => {
-  const {_} = useLingui()
-  return (
-    <View style={styles.footer}>
-      <Button
-        label={_(msg`Send feedback`)}
-        size="small"
-        variant="solid"
-        color="secondary"
-        onPress={onPressFeedback}>
-        <ButtonIcon icon={Message} position="left" />
-        <ButtonText>
-          <Trans>Feedback</Trans>
-        </ButtonText>
-      </Button>
-      <Button
-        label={_(msg`Get help`)}
-        size="small"
-        variant="outline"
-        color="secondary"
-        onPress={onPressHelp}
-        style={{
-          backgroundColor: 'transparent',
-        }}>
-        <ButtonText>
-          <Trans>Help</Trans>
-        </ButtonText>
-      </Button>
-    </View>
-  )
-}
-DrawerFooter = React.memo(DrawerFooter)
+// let DrawerFooter = ({
+//   onPressFeedback,
+//   onPressHelp,
+// }: {
+//   onPressFeedback: () => void
+//   onPressHelp: () => void
+// }): React.ReactNode => {
+//   const {_} = useLingui()
+//   return (
+//     <View style={styles.footer}>
+//       <Button
+//         label={_(msg`Send feedback`)}
+//         size="small"
+//         variant="solid"
+//         color="secondary"
+//         onPress={onPressFeedback}>
+//         <ButtonIcon icon={Message} position="left" />
+//         <ButtonText>
+//           <Trans>Feedback</Trans>
+//         </ButtonText>
+//       </Button>
+//       <Button
+//         label={_(msg`Get help`)}
+//         size="small"
+//         variant="outline"
+//         color="secondary"
+//         onPress={onPressHelp}
+//         style={{
+//           backgroundColor: 'transparent',
+//         }}>
+//         <ButtonText>
+//           <Trans>Help</Trans>
+//         </ButtonText>
+//       </Button>
+//     </View>
+//   )
+// }
+//DrawerFooter = React.memo(DrawerFooter)
 
 interface MenuItemProps extends ComponentProps<typeof TouchableOpacity> {
   icon: JSX.Element
