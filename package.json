@@ -55,7 +55,7 @@
     "@atproto/api": "link:./../cproto/packages/api",
     "@bam.tech/react-native-image-resizer": "^3.0.4",
     "@braintree/sanitize-url": "^6.0.2",
-    "@coinbase/onchainkit": "^0.31.4",
+    "@coinbase/onchainkit": "^0.33.1",
     "@discord/bottom-sheet": "bluesky-social/react-native-bottom-sheet",
     "@emoji-mart/react": "^1.1.1",
     "@expo/html-elements": "^0.4.2",
