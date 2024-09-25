@@ -255,7 +255,7 @@ function HomeScreenReady({
       <FeedPage
         testID="customFeedPage"
         isPageFocused
-        feed={`feedgen|${PROD_DEFAULT_FEED('crypto')}`}
+        feed={`aaactgbfpm2iy|${PROD_DEFAULT_FEED('aaactgbfpm2iy')}`}
         renderEmptyState={renderCustomFeedEmptyState}
       />
     </Pager>

@@ -61,7 +61,7 @@ export function IS_PROD_SERVICE(url?: string) {
 }
 
 export const PROD_DEFAULT_FEED = (rkey: string) =>
-  `at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/${rkey}`
+  `at://did:plc:2zlzmv2xujgpohsvay3xhpbr/app.bsky.feed.generator/${rkey}`
 
 export const POST_IMG_MAX = {
   width: 2000,
@@ -107,7 +107,7 @@ export const BSKY_FEED_OWNER_DIDS = [
 ]
 
 export const DISCOVER_FEED_URI =
-  'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot'
+  'at://did:plc:2zlzmv2xujgpohsvay3xhpbr/app.bsky.feed.generator/aaactgbfpm2iy'
 export const DISCOVER_SAVED_FEED = {
   type: 'feed',
   value: DISCOVER_FEED_URI,

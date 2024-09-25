@@ -26,7 +26,7 @@ export function ProfileHeaderHandle({
   let ethAddress = ''
   if (
     useResolveDidQueryResult.data &&
-    useResolveDidQueryResult.data.alsoKnownAs[1]
+    useResolveDidQueryResult.data.alsoKnownAs[1] !== undefined
   ) {
     const parts = useResolveDidQueryResult.data.alsoKnownAs[1].split(':')
     const ethereumAddress = parts[2]

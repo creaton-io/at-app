@@ -262,7 +262,7 @@ export function useReplaceForYouWithDiscoverFeedMutation() {
         await agent.addSavedFeeds([
           {
             type: 'feed',
-            value: PROD_DEFAULT_FEED('whats-hot'),
+            value: PROD_DEFAULT_FEED('aaactgbfpm2iy'),
             pinned: true,
           },
         ])

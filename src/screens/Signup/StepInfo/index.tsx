@@ -6,9 +6,11 @@ import * as EmailValidator from 'email-validator'
 import type tldts from 'tldts'
 import {useAccount} from 'wagmi'
 
+import {usePalette} from '#/lib/hooks/usePalette'
 import {logEvent} from '#/lib/statsig/statsig'
 import {isEmailMaybeInvalid} from '#/lib/strings/email'
 import {logger} from '#/logger'
+import {TextLink} from '#/view/com/util/Link'
 import {WalletComponents} from '#/screens/Login/LoginWallet'
 import {ScreenTransition} from '#/screens/Login/ScreenTransition'
 import {is13, is18, useSignupContext} from '#/screens/Signup/state'
@@ -51,6 +53,7 @@ export function StepInfo({
   const emailValueRef = useRef<string>(state.email)
   const prevEmailValueRef = useRef<string>(state.email)
   const account = useAccount()
+  const pal = usePalette('default')
 
   const [hasWarnedEmail, setHasWarnedEmail] = React.useState<boolean>(false)
 
@@ -153,7 +156,19 @@ export function StepInfo({
             {state.serviceDescription.inviteCodeRequired && (
               <View>
                 <TextField.LabelText>
-                  <Trans>Invite code</Trans>
+                  <Trans>Invite code needed, DM @Aer0xander</Trans> on
+                  <TextLink
+                    style={pal.link}
+                    href="https://x.com/aer0xander"
+                    text=" Twitter "
+                  />
+                  or
+                  <TextLink
+                    style={pal.link}
+                    href="https://warpcast.com/aer0xander"
+                    text=" Warpcast "
+                  />
+                  for an invite!
                 </TextField.LabelText>
                 <TextField.Root>
                   <TextField.Icon icon={Ticket} />

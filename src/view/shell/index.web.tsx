@@ -8,6 +8,7 @@ import {useColorSchemeStyle} from '#/lib/hooks/useColorSchemeStyle'
 import {useWebBodyScrollLock} from '#/lib/hooks/useWebBodyScrollLock'
 import {NavigationProp} from '#/lib/routes/types'
 import {colors, s} from '#/lib/styles'
+import {useSession} from '#/state/session'
 import {useIsDrawerOpen, useSetDrawerOpen} from '#/state/shell'
 import {useCloseAllActiveElements} from '#/state/util'
 import {UniversalWallet} from '#/view/com/util/UniversalWallet'
@@ -29,6 +30,7 @@ function ShellInner() {
   const navigator = useNavigation<NavigationProp>()
   const closeAllActiveElements = useCloseAllActiveElements()
   const {_} = useLingui()
+  const {hasSession} = useSession()
 
   useWebBodyScrollLock(isDrawerOpen)
 
@@ -50,7 +52,7 @@ function ShellInner() {
       <SigninDialog />
       <Lightbox />
       <PortalOutlet />
-      {!isDesktop && <UniversalWallet />}
+      {hasSession && !isDesktop && <UniversalWallet />}
 
       {!isDesktop && isDrawerOpen && (
         <TouchableWithoutFeedback
